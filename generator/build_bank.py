@@ -83,9 +83,9 @@ def run(FSCALE, OPCY, SLOPES):
             if s['role'] == 'pow':
                 b = seq[-1] if seq else None
                 if b and b['c'] != 'frac':
-                    pows.append(dict(base=b['c'], scale=s['h'] / D, bot=(s['y1'] - base(s['cx'])) / D, top=(s['y0'] - base(s['cx'])) / D, dx=(s['x0'] - b['x1']) / D))
+                    pows.append(dict(base=b['c'], rel_top=(s['y1'] - b['y0']) / D if 'y0' in b else None, scale=s['h'] / D, bot=(s['y1'] - base(s['cx'])) / D, top=(s['y0'] - base(s['cx'])) / D, dx=(s['x0'] - b['x1']) / D))
                 seq[-1] = dict(seq[-1], x1=max(seq[-1]['x1'], s['x1']), te=s['te'], c=seq[-1]['c'] + '^'); i += 1; continue
-            seq.append(dict(c=s['c'], x0=s['x0'], x1=s['x1'], ts=s['ts'], te=s['te'], at=i)); i += 1
+            seq.append(dict(c=s['c'], x0=s['x0'], x1=s['x1'], y0=s['y0'], y1=s['y1'], ts=s['ts'], te=s['te'], at=i)); i += 1
         arrow_after = set(arr)
         for a, b in zip(seq, seq[1:]):
             g = (b['x0'] - a['x1']) / D
@@ -124,7 +124,7 @@ style = dict(
     pair_gaps={k: [round(x, 3) for x in v] for k, v in sorted(pair_gaps.items()) if len(v) >= 6},
     gaps_all=q([x for k, v in gaps.items() if k != 'arrow' for x in v]),
     touch_rate=round(float(np.mean([x < 0.03 for k, v in gaps.items() if k != 'arrow' for x in v])), 4),
-    power=dict(n=len(pows), scale=q([p['scale'] for p in pows]), bot=q([p['bot'] for p in pows]), top=q([p['top'] for p in pows]), dx=q([p['dx'] for p in pows]), list=pows),
+    power=dict(n=len(pows), rel_top=q([p['rel_top'] for p in pows if p['rel_top'] is not None]), scale=q([p['scale'] for p in pows]), bot=q([p['bot'] for p in pows]), top=q([p['top'] for p in pows]), dx=q([p['dx'] for p in pows]), list=pows),
     fraction=dict(n=len(fracs), **{k: q([f[k] for f in fracs]) for k in ['bar_y', 'num_gap', 'den_gap', 'scale', 'over', 'num_dx', 'den_dx']},
                   inner_gap=q([g for f in fracs for g in f['num_gaps'] + f['den_gaps']]), list=fracs),
     equals=dict(n=len(eqs), w=q([e['w'] for e in eqs]), sep=q([e['sep'] for e in eqs]), cy=q([e['cy'] for e in eqs]), dx=q([e['dx'] for e in eqs]), top_vs_bottom_len=q([e['lw'][0] / max(1e-3, e['lw'][1]) for e in eqs])),

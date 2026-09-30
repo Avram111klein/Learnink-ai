@@ -1,8 +1,4 @@
-"""v2 (after the blind look-test): powers anchored top-right of the base box with the owner's raise/scale and no overlap;
-light touching only (no deep overlaps); every sample normalised to its class height and baseline (operators mid-line);
-one sample per letter per exercise; malformed bank samples dropped by an outlier check against the class centroid.
-
-Synthetic exercises in the owner's handwriting, composed from real TRAIN-only symbol samples (bank.json.gz) with the layout
+"""Synthetic exercises in the owner's handwriting, composed from real TRAIN-only symbol samples (bank.json.gz) with the layout
 statistics of style.json. Output = the trainer's item format + sources/style.
 
 usage: python3 gen.py N out.jsonl.gz [seed]
@@ -15,31 +11,6 @@ HERE = __file__.rsplit('/', 1)[0] if '/' in __file__ else '.'
 BANK = json.load(gzip.open(HERE + '/bank.json.gz', 'rt'))
 STY = json.load(open(HERE + '/style.json'))
 SYM = BANK['symbols']
-OPS = set('+-=÷')
-
-def _raster(s, n=20):
-    """sample -> n x n bitmap (bbox-fitted, aspect kept), for the outlier check"""
-    from PIL import Image, ImageDraw
-    P = [np.array([p[:2] for p in st], float) for st in s['s']]; A = np.vstack(P); lo = A.min(0); sz = max(np.ptp(A[:, 0]), np.ptp(A[:, 1]), 1e-3)
-    im = Image.new('L', (n * 2, n * 2), 0); d = ImageDraw.Draw(im); off = (n * 2 - 2) * (1 - np.ptp(A, 0) / sz) / 2
-    for q in P:
-        q = (q - lo) / sz * (n * 2 - 2) + 1 + off; pts = [tuple(v) for v in q]
-        d.line(pts if len(pts) > 1 else pts * 2, fill=255, width=3)
-    return np.asarray(im.resize((n, n), Image.BILINEAR), float).ravel() / 255
-
-def _clean(v):
-    """drop outliers: bitmap distance to the class centroid or aspect ratio beyond median + 3.5 MAD (classes with >= 8 samples)"""
-    if len(v) < 8: return v, []
-    X = np.array([_raster(s) for s in v]); X /= np.linalg.norm(X, axis=1, keepdims=True) + 1e-9; c = X.mean(0); d = np.linalg.norm(X - c, axis=1)
-    ar = np.log(np.array([(s['w'] + 0.02) / (s['h'] + 0.02) for s in v]))
-    bad = lambda z: np.abs(z - np.median(z)) > 3.5 * (np.median(np.abs(z - np.median(z))) * 1.4826 + 1e-6)
-    out = (d > np.median(d) + 3.5 * np.median(np.abs(d - np.median(d))) * 1.4826) | bad(ar)
-    return [s for s, o in zip(v, out) if not o], [s for s, o in zip(v, out) if o]
-DROPPED = {}
-for _c in list(SYM):
-    if _c == 'bar': continue
-    SYM[_c], _d = _clean(SYM[_c])
-    if _d: DROPPED[_c] = len(_d)
 MAIN = {c: [s for s in v if s['role'] == 'main'] for c, v in SYM.items()}
 POW = {c: [s for s in v if s['role'] == 'pow'] for c, v in SYM.items()}
 BARS = SYM['bar']; ARROWS = BANK['arrow']
@@ -51,17 +22,9 @@ POWS = STY['power']['list']; PAUSES = STY['timing']['pause_list']
 DL, SL, RL = STY['D_list'], STY['baseline']['slope_list'], STY['baseline']['resid_list']
 XY = STY['start']['xy_list']; CANV = [c for c, n in STY['canvas'] for _ in range(n)]
 KROT = STY['glyph_rotation_follows_baseline']['k'] * float(__import__('os').environ.get('GEN_KROT', '1'))
-TOUCH = float(__import__('os').environ.get('GEN_TOUCH', '0'))
+TOUCH = float(__import__('os').environ.get('GEN_TOUCH', '0.01'))
 HARD_RATE = float(__import__('os').environ.get('GEN_HARD', '0.3'))
 TRAIN = set(STY['train_ids_used'])
-# class norms (from the kept main-row samples): height, baseline offset of the bottom, centre (operators), width (flat marks)
-NORM = {}
-for _c, _v in MAIN.items():
-    if len(_v) >= 3:
-        NORM[_c] = dict(h=float(np.median([s['h'] for s in _v])), bot=float(np.median([s['bot'] for s in _v])),
-                        cy=float(np.median([(s['top'] + s['bot']) / 2 for s in _v])), w=float(np.median([s['w'] for s in _v])))
-POW2 = [p for p in POWS if p.get('rel_top') is not None]
-PSCALE = float(np.median([p['scale'] for p in POWS]))
 
 def kind(c):
     return 'f' if c == 'frac' else 'd' if c.isdigit() else 'l' if c.isalpha() else 'o' if c == '(' else 'c' if c == ')' else 'p' if c == '.' else 'op'
@@ -76,30 +39,19 @@ class Ex:
         self.speed = r.uniform(0.85, 1.15); self.pk = r.uniform(0.9, 1.1)
         self.pen_w = round(r.uniform(1.8, 3.2), 2)
         self.rot0 = r.uniform(-1.5, 1.5); self.shear0 = r.uniform(-0.04, 0.04)
-        self.parts = []; self.sources = set(); self.t = 0.0; self.fixed = {}; self.last_ink = None; self.touch = False
+        self.parts = []; self.sources = set(); self.t = 0.0
 
     def base(self, x): return self.y0 + self.slope * (x - self.x0)
 
     def pick(self, pool):
         s = self.r.choice(pool); self.sources.add(s['src']); return s
 
-    def xform(self, s, scale, xscale=1.0, norm=None, pow_h=None):
-        """sample strokes (D units, x from left edge, y from its baseline) -> augmented, in px relative to (left, baseline).
-        norm=class: rescale to the class's median height (width for flat marks) and move to its median baseline offset
-        (centre for operators), then only small jitter. pow_h: rescale to this height, bottom at 0."""
+    def xform(self, s, scale, xscale=1.0):
+        """sample strokes (D units, x from left edge, y from its baseline) -> augmented, in px relative to (left, baseline)"""
         r = self.r; D = self.D * scale
         ang = math.radians(r.uniform(-4, 4) * 0.6 + self.rot0) + KROT * (math.atan(self.slope) - math.atan(s['slope']))
-        sh = self.shear0 + r.uniform(-0.06, 0.06); k = min(1.08, max(0.92, 1 + r.gauss(0, 0.04)))
-        f, dy = 1.0, 0.0
-        if pow_h is not None:
-            f = pow_h / max(s['h'], 0.05); dy = -s['bot'] * f
-        elif norm in NORM and norm != '.':
-            N = NORM[norm]
-            f = N['w'] / max(s['w'], 0.05) if norm in '-=' else N['h'] / max(s['h'], 0.05)
-            f = min(2.0, max(0.5, f))
-            if norm in OPS: dy = N['cy'] + r.gauss(0, 0.03) - (s['top'] + s['bot']) / 2 * f
-            else: dy = N['bot'] + r.gauss(0, 0.03) - s['bot'] * f
-        P = [(np.array([[p[0], p[1]] for p in st], float) * f + [0, dy]) * [k * xscale, k] for st in s['s']]
+        sh = self.shear0 + r.uniform(-0.06, 0.06); k = r.uniform(0.92, 1.08)
+        P = [np.array([[p[0], p[1]] for p in st], float) * [k * xscale, k] for st in s['s']]
         allp = np.vstack(P); c = allp.mean(0)
         ca, sa = math.cos(ang), math.sin(ang)
         out = []
@@ -128,65 +80,31 @@ class Ex:
         self.parts.append(out); return self.box(out)
 
     def glyph(self, c, role='main', scale=1.0):
-        """a sample for token c -> strokes rel. to left edge/baseline (normalised). Letters: one sample per exercise."""
-        if role == 'pow':
-            pool = POW.get(c) if len(POW.get(c, [])) >= 3 and self.r.random() < 0.7 else (MAIN.get(c) or SYM[c])
-            ph = PSCALE * self.r.uniform(0.92, 1.08)
-            return self.xform(self.pick(pool), scale, pow_h=ph), 'pow'
+        """a sample for token c; returns (strokes rel. to left edge/baseline, used-own-baseline flag)"""
+        if role == 'pow' and len(POW.get(c, [])) >= 3 and self.r.random() < 0.7:
+            return self.xform(self.pick(POW[c]), scale), 'own'
         pool = MAIN.get(c) or SYM[c]
-        if c.isalpha():
-            if c not in self.fixed: self.fixed[c] = self.pick(pool)
-            s = self.fixed[c]
-        else: s = self.pick(pool)
-        return self.xform(s, scale, norm=c), 'main'
+        return self.xform(self.pick(pool), scale), 'main'
 
     def gap(self, a, b):
         r = self.r
-        self.touch = False
-        if r.random() < TOUCH: self.touch = True; return r.uniform(-0.03, 0.03)
+        if r.random() < TOUCH: return r.uniform(-0.06, 0.03)             # extra touching / near-touching neighbours
         L = PAIR.get(a + '|' + b) if len(PAIR.get(a + '|' + b, [])) >= 8 else GAPS.get(kind(a.rstrip('^')) + '>' + kind(b)) or GALL
-        g = r.choice(L if len(L) >= 5 else GALL)
-        # the owner's touching neighbours (gap < 0.03 D, ~15 %) are kept as light touching only; never a deep overlap
-        if g < 0.03: self.touch = True; return r.uniform(-0.03, 0.03)
-        return g
-
-    def ink_shift(self, placed, touch):
-        """how far to push a unit right so its ink does not run into the previous unit's ink: light touching
-        (a few points within 0.025 D) only where the owner's gap said 'touch', otherwise a clear 0.05 D"""
-        if self.last_ink is None: return 0.0
-        A = np.array([[p[0] + dx, p[1] + dy] for st, dx, dy in placed for s in st for p in s]); Bk = self.last_ink
-        u = self.D; sh = 0.0
-        Bk = Bk[Bk[:, 0] > A[:, 0].min() - 0.2 * u]
-        if not len(Bk): return 0.0
-        for _ in range(60):
-            d = np.sqrt(((A[:, None, :] + [sh, 0] - Bk[None, :, :]) ** 2).sum(-1)).min(1)
-            if (touch and (d < 0.025 * u).sum() <= 4 and d.min() > 0.0) or (not touch and d.min() >= 0.05 * u): break
-            sh += 0.02 * u
-        return sh
-
-    def emit(self, placed, touch):
-        sh = self.ink_shift(placed, touch)
-        for st, dx, dy in placed: self.put(st, dx + sh, dy)
-        self.last_ink = np.array([[p[0] + dx + sh, p[1] + dy] for st, dx, dy in placed for s in st for p in s])
-        return sh
+        return max(-0.2, r.choice(L if len(L) >= 5 else GALL))   # the rare deep overlaps of the real data are clipped
 
     def row(self, toks, x, scale, place):
         """lay out a flat token list (with ^ powers) starting at x; place(strokes)->(dy) decides vertical; returns x1, list of (strokes, dx)"""
         items, prev = [], None
         for tok, role in toks:
             if tok.startswith('^'):
-                # anchored to the top-right of the base's box: the owner's (dx, raise) pair; no overlap with the base
-                c = tok[1:]; pe = self.r.choice(POW2); u = self.D * scale
-                st, _ = self.glyph(c, 'pow', scale); b = self.box(st)
-                bi = max(i for i, it in enumerate(items) if it[2][0] != 'rel'); bst, bdx, (bm, boff) = items[bi]; B = self.box(bst)
-                Bx0, By0, Bx1, By1 = B[0] + bdx, B[1] + boff, B[2] + bdx, B[3] + boff
-                px0 = Bx1 + min(0.15, max(-0.35, pe['dx'])) * u; py1 = By0 + min(0.15, max(-0.35, pe['rel_top'])) * u
-                pw, ph = b[2] - b[0], b[3] - b[1]; m = 0.04 * u
-                if px0 < Bx1 + m and py1 > By0 - m:          # would overlap the base: lift it, or move right if that is shorter
-                    if py1 - (By0 - m) <= (Bx1 + m) - px0 + 0.1 * u: py1 = By0 - m
-                    else: px0 = Bx1 + m
-                dx = px0 - b[0]; items.append((st, dx, ('rel', bi, boff + py1 - b[3])))
-                x = max(x, dx + b[2]); continue
+                c = tok[1:]; pe = self.r.choice(POWS)
+                st, mode = self.glyph(c, 'pow', scale)
+                if mode == 'main':   # shrink a normal digit to power size
+                    b = self.box(st); h = b[3] - b[1]; f = pe['scale'] * self.D * scale / max(h, 1e-3)
+                    st = [[[p[0] * f, p[1] * f, p[2], p[3]] for p in s] for s in st]
+                b = self.box(st); dx = x + pe['dx'] * self.D * scale - b[0]
+                items.append((st, dx, ('pow', pe['bot'] * self.D * scale - b[3] if mode == 'main' else 0.0)))
+                x = dx + b[2]; continue
             c = tok
             st, _ = self.glyph(c, 'main', scale); b = self.box(st)
             if prev is not None: x += self.gap(prev, c) * self.D * scale
@@ -217,16 +135,15 @@ class Ex:
                     x += g
                 else:
                     x += self.gap(prevc, 'frac' if c == 'frac' else c) * self.D
-            touch = self.touch if prevc is not None and at not in arrows else False
             if c == 'frac':
-                x1, placed = self.frac(toks, x)
+                x = self.frac(toks, x)
             else:
-                x1, items = self.row(toks, x, 1.0, None); placed = []
-                for st, dx, (m, *rest) in items:
+                x1, items = self.row(toks, x, 1.0, None)
+                for st, dx, (m, off) in items:
                     b = self.box(st); cx = dx + (b[0] + b[2]) / 2
-                    dy = placed[rest[0]][2] + rest[1] if m == 'rel' else self.base(cx) + r.gauss(0, 0.02) * self.D
-                    placed.append((st, dx, dy))
-            x = x1 + self.emit(placed, touch)
+                    dy = self.base(cx) + (off if m == 'pow' else 0.0) + r.gauss(0, 0.02) * self.D
+                    self.put(st, dx, dy)
+                x = x1
             prevc = 'frac' if c == 'frac' else c + ('^' if any(t.startswith('^') for t, _ in toks) else '')
         return self
 
@@ -235,9 +152,7 @@ class Ex:
         nu = [(t, 'main' if ro == 'num' else 'pow') for t, ro in toks if ro in ('num', 'numpow')]
         de = [(t, 'main' if ro == 'den' else 'pow') for t, ro in toks if ro in ('den', 'denpow')]
         global FGAPS
-        def fgap(a, b):
-            v = r.choice(FGAPS); return r.uniform(-0.03, 0.03) if v < 0.03 else v
-        saveG = self.gap; self.gap = fgap
+        saveG = self.gap; self.gap = lambda a, b: (r.uniform(-0.06, 0.03) if r.random() < TOUCH else r.choice(FGAPS))
         nx1, ni = self.row(nu, 0.0, fs, None); dx1, di = self.row(de, 0.0, fs, None); self.gap = saveG
         nw = nx1 - min(dx + self.box(st)[0] for st, dx, _ in ni); dw = dx1 - min(dx + self.box(st)[0] for st, dx, _ in di)
         over = max(-0.05, f['over'] + r.gauss(0, 0.05)) * self.D
@@ -249,19 +164,16 @@ class Ex:
             # row centred on the bar (+ real offset); anchored by its lowest bottom (numerator) or highest top (denominator)
             x0 = min(dx + self.box(st)[0] for st, dx, _ in items); shift = bcx + cxo * self.D - width / 2 - x0
             offs = []
-            for st, dx, (m, *rest) in items:
-                off = rest[1] if m == 'rel' else 0.0
+            for st, dx, (m, off) in items:
                 b = self.box(st); offs.append(b[3] + off if anchor == 'bottom' else b[1] + off)
             ref = max(offs) if anchor == 'bottom' else min(offs)
             rb = bcy - gap * self.D - ref if anchor == 'bottom' else bcy + gap * self.D - ref
-            res = []
-            for st, dx, (m, *rest) in items:
-                dy = res[rest[0]][2] + rest[1] if m == 'rel' else rb + r.gauss(0, 0.015) * self.D
-                res.append((st, dx + shift, dy))
-            return res
+            return [(st, dx + shift, rb + off + r.gauss(0, 0.015) * self.D) for st, dx, (m, off) in items]
         N = place(ni, nw, f['num_dx'], 'bottom', f['num_gap']); Dn = place(di, dw, f['den_dx'], 'top', f['den_gap'])
-        bb = self.box(bst); placed = N + [(bst, bcx - (bb[0] + bb[2]) / 2, bcy - (bb[1] + bb[3]) / 2)] + Dn
-        return max(p[0] + dx for st, dx, dy in placed for s in st for p in s), placed
+        for st, dx, dy in N: self.put(st, dx, dy)
+        bb = self.box(bst); self.put(bst, bcx - (bb[0] + bb[2]) / 2, bcy - (bb[1] + bb[3]) / 2)
+        for st, dx, dy in Dn: self.put(st, dx, dy)
+        return max(max(p[0] for st in part for p in st) for part in self.parts[-(len(N) + len(Dn) + 1):])
 
     def finish(self):
         S = [st for part in self.parts for st in part]
