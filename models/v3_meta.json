@@ -1,0 +1,113 @@
+{
+ "version": 3,
+ "name": "r5",
+ "trainedAt": "2026-09-30T07:37:47Z",
+ "metrics": {
+  "answerAcc": 0.125,
+  "symbolAcc": 0.7511,
+  "falseX": 0.25
+ },
+ "detail": {
+  "source": "hwdata/round2 – owner TEST-B (24 of the 119 new items, never trained on or tuned on), reader = hw_exp.js",
+  "answerAcc": "exact whole answers, owner TEST-B",
+  "symbolAcc": "token accuracy, owner TEST-B (trainer-style alignment)",
+  "falseX": "sure (p>=0.5), well-formed, same shape, but wrong – owner TEST-B",
+  "strictX": "falseX that also has exactly the right operators",
+  "testB": {
+   "answerAcc": 0.125,
+   "symbolAcc": 0.7511,
+   "falseX": 0.25,
+   "strictX": 0.0,
+   "n": 24
+  },
+  "testA": {
+   "answerAcc": 0.1212,
+   "symbolAcc": 0.7332,
+   "falseX": 0.0303,
+   "strictX": 0.0303,
+   "n": 33
+  },
+  "r4_testB": {
+   "answerAcc": 0.125,
+   "symbolAcc": 0.7382,
+   "falseX": 0.2917,
+   "strictX": 0.0417,
+   "n": 24
+  },
+  "r4_testA": {
+   "answerAcc": 0.0909,
+   "symbolAcc": 0.7146,
+   "falseX": 0.0606,
+   "strictX": 0.0606,
+   "n": 33
+  },
+  "digits": {
+   "single": 0.9625,
+   "triple": 0.9173,
+   "n": 400
+  },
+  "mnist": {
+   "digitsOnly": 0.984,
+   "allClasses": 0.977
+  },
+  "frozen": {
+   "realSym": 0.7576,
+   "synthSym": 0.971,
+   "penExprExact": 0.687
+  },
+  "trainedOn": "r4 + owner's round-2 train_fit symbols (821 labelled, augmented) + replay of the synthetic/MNIST mix; no CROHME",
+  "caveat": "gains are personal to one writer; TEST-A n=33, TEST-B n=24"
+ },
+ "topConf": [
+  [
+   "÷→∅",
+   8
+  ],
+  [
+   "^2→2",
+   5
+  ],
+  [
+   "(→∅",
+   5
+  ],
+  [
+   "c→∅",
+   3
+  ],
+  [
+   "b→∅",
+   3
+  ],
+  [
+   "=→∅",
+   2
+  ],
+  [
+   "^2→3",
+   2
+  ],
+  [
+   "a→6",
+   2
+  ]
+ ],
+ "history": [
+  {
+   "version": 1,
+   "answerAcc": 0.068,
+   "published": true
+  },
+  {
+   "version": 2,
+   "answerAcc": 0.0909,
+   "published": true
+  },
+  {
+   "version": 3,
+   "answerAcc": 0.125,
+   "published": false
+  }
+ ],
+ "notes": "גרסה 3: המודל למד מעוד תרגילים שכתבת, וקורא את הכתב שלך קצת יותר טוב."
+}

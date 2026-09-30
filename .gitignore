@@ -1,0 +1,7 @@
+# never commit user data
+*.jsonl.gz
+bank.json.gz
+**/samples/
+**/looktest/
+*_KEY.json
+__pycache__/

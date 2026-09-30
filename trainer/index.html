@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מאמן כתב יד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F1EA; --panel:#FDFCF8; --ink:#1B2230; --ink2:#3A4250; --muted:#5E6778; --line:#E2DED3;
+  --accent:#2450B8; --accent-hover:#1A3D8F; --on-accent:#FFFFFF; --accent-soft:#E6ECF9; --accent-soft-ink:#1A3D8F;
+  --ok:#1E7F46; --ok-bg:#E3F3E8; --ok-ink:#17603A; --bad:#C23A3F; --bad-bg:#FBEAEA; --bad-ink:#8A2A2E;
+  --warn-bg:#FFF1D6; --warn-ink:#7A4A00; --chip:#F1EEE6; --info:#EEF2F7; --track:#E8E4DA; --row:#F7F5EF;
+  --paper:#FFFFFF; --grid:#EEF2F7; --pen:#1B2230; --faint:#98A3B3;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161C; --panel:#1B1F27; --ink:#E7EAF0; --ink2:#C9CED8; --muted:#9AA3B2; --line:#2D333E;
+    --accent:#7F9FEE; --accent-hover:#A3BBF5; --on-accent:#0D1322; --accent-soft:#22304F; --accent-soft-ink:#C3D3F8;
+    --ok:#5CC08A; --ok-bg:#16342A; --ok-ink:#A2E3BE; --bad:#F07A7F; --bad-bg:#3A1C20; --bad-ink:#F6B8BB;
+    --warn-bg:#3A2D10; --warn-ink:#F2CE7C; --chip:#262B35; --info:#1E2532; --track:#2A303B; --row:#20252E;
+    --paper:#0F1217; --grid:#1B212C; --pen:#E7EAF0; --faint:#6D7686;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13161C; --panel:#1B1F27; --ink:#E7EAF0; --ink2:#C9CED8; --muted:#9AA3B2; --line:#2D333E;
+  --accent:#7F9FEE; --accent-hover:#A3BBF5; --on-accent:#0D1322; --accent-soft:#22304F; --accent-soft-ink:#C3D3F8;
+  --ok:#5CC08A; --ok-bg:#16342A; --ok-ink:#A2E3BE; --bad:#F07A7F; --bad-bg:#3A1C20; --bad-ink:#F6B8BB;
+  --warn-bg:#3A2D10; --warn-ink:#F2CE7C; --chip:#262B35; --info:#1E2532; --track:#2A303B; --row:#20252E;
+  --paper:#0F1217; --grid:#1B212C; --pen:#E7EAF0; --faint:#6D7686;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Rubik",system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.screen{height:100dvh;height:100vh;display:flex;flex-direction:column}
+@supports (height:100dvh){.screen{height:100dvh}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.btn{min-height:56px;min-width:56px;padding:0 22px;font-size:16px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{border:0;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:18px;padding:0 40px}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link-btn{min-height:44px;font-size:15px;font-weight:500;padding:10px 14px;border-radius:10px;background:var(--accent-soft);color:var(--accent-soft-ink);border:0}
+.muted{color:var(--muted)}
+h1,h2{margin:0}
+bdi.m,.m{font-variant-numeric:tabular-nums}
+
+/* ---------- consent ---------- */
+#consent{align-items:center;justify-content:center;padding:16px;overflow:auto}
+#consent section{width:min(640px,100%);padding:40px 44px;display:flex;flex-direction:column;gap:22px;border-radius:18px;box-shadow:0 1px 2px rgba(20,30,50,.08),0 6px 22px rgba(20,30,50,.10)}
+#consent .ttl{display:flex;align-items:center;gap:12px}
+#consent h1{font-size:30px;font-weight:700}
+#consent p{margin:0;font-size:17px;line-height:1.6;color:var(--ink2)}
+#consent ul{margin:0;padding:0 20px 0 0;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.5}
+#consent label{display:flex;align-items:center;gap:12px;font-size:16px;padding:12px 14px;min-height:56px;background:var(--info);border-radius:12px;cursor:pointer}
+#consent input{width:24px;height:24px;accent-color:var(--accent);flex-shrink:0}
+#consent .btn.primary{height:58px;font-size:19px}
+
+/* ---------- header ---------- */
+header{min-height:64px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px;white-space:nowrap}
+.prog{flex-grow:1;display:flex;align-items:center;gap:12px;min-width:0}
+.track{flex-grow:1;height:10px;background:var(--track);border-radius:999px;overflow:hidden}
+.track>div{height:10px;background:var(--accent);border-radius:999px;width:0;transition:width .3s}
+.prog span{font-size:14px;color:var(--muted);white-space:nowrap}
+.pill{font-size:13px;color:var(--muted);background:var(--chip);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.banner{min-height:40px;padding:6px 24px;display:flex;align-items:center;gap:10px;font-size:14px;flex-shrink:0}
+.banner.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.banner.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.banner.info{background:var(--info);color:var(--ink2)}
+
+/* ---------- writing ---------- */
+.work{flex-grow:1;display:flex;gap:20px;padding:20px 24px;min-height:0}
+.work main{flex-grow:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+.prompt{padding:14px 24px;display:flex;flex-direction:column;gap:6px}
+.prompt .hint{font-size:15px;color:var(--muted);display:flex;gap:10px;align-items:center}
+.tag{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-soft-ink)}
+.math{font-size:42px;font-weight:500;letter-spacing:1px;text-align:center;padding:4px 0;line-height:1.25;white-space:nowrap;overflow:hidden}
+.math i{font-style:italic;font-family:"Times New Roman",Georgia,serif;font-size:1.1em;padding:0 .02em}
+.math .op{padding:0 .18em}
+.math .arr{color:var(--faint);padding:0 .5em}
+.math .gap{display:inline-block;width:.9em}
+.math sup{font-size:.6em;vertical-align:.8em;line-height:0}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.72em;margin:0 .12em}
+.fr>span{padding:0 .15em;line-height:1.1}
+.fr>span:first-child{border-bottom:.08em solid currentColor}
+.padwrap{flex-grow:1;position:relative;min-height:160px;border:2px solid var(--accent);border-radius:14px;overflow:hidden;background:var(--paper)}
+#pad{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:crosshair}
+.padwrap .where{position:absolute;top:10px;right:16px;font-size:13px;color:var(--muted);pointer-events:none}
+.padwrap .live{position:absolute;bottom:14px;left:16px;right:16px;font-size:15px;color:var(--muted);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.padwrap .live bdi{font-size:18px;color:var(--ink)}
+.idle{position:absolute;left:0;bottom:0;height:5px;background:var(--accent);width:0;opacity:.7}
+.idle.run{animation:idle var(--idle-ms,2500ms) linear forwards}
+@keyframes idle{from{width:0}to{width:100%}}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bar .grow{flex-grow:1}
+.toggle{display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--muted);cursor:pointer;padding:0 6px}
+.toggle input{width:22px;height:22px;accent-color:var(--accent)}
+aside{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;overflow:auto}
+aside .panel{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+aside h2{font-size:17px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:20px;min-width:34px;text-align:center;padding:6px 8px;border-radius:8px;background:var(--ok-bg);color:var(--ok-ink)}
+.chip.bad{background:var(--bad-bg);color:var(--bad-ink);outline:2px solid var(--bad)}
+.chip.extra{background:var(--chip);color:var(--muted);text-decoration:line-through}
+.chip sup{font-size:.6em}
+.msg{font-size:14px;border-radius:10px;padding:10px 12px;line-height:1.5}
+.msg.bad{color:var(--bad-ink);background:var(--bad-bg)}
+.msg.ok{color:var(--ok-ink);background:var(--ok-bg)}
+.small{font-size:14px;color:var(--muted);line-height:1.5}
+.conf{display:flex;flex-wrap:wrap;gap:8px}
+.conf span{font-size:16px;padding:6px 12px;border-radius:999px;background:var(--chip)}
+.readline{font-size:14px;color:var(--muted)}
+.readline bdi{font-size:18px;color:var(--ink)}
+
+/* ---------- progress ---------- */
+#progress{overflow:auto;padding:24px 28px;gap:18px}
+#progress .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#progress h1{font-size:26px;font-weight:700;flex-grow:1}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tile{padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.tile .l{font-size:14px;color:var(--muted)}
+.tile .v{font-size:32px;font-weight:700}
+.tile .s{font-size:13px;color:var(--muted)}
+.cols{display:flex;gap:16px;align-items:flex-start}
+.cols>section{padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.cols>section:first-child{flex-grow:1;min-width:0}
+.cols>section.side{width:400px;flex-shrink:0}
+.symgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.sym{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;background:var(--row)}
+.sym .h{display:flex;justify-content:space-between;align-items:baseline}
+.sym .c{font-size:22px;font-weight:600}
+.sym .n{font-size:12px;color:var(--muted)}
+.sym .t{height:6px;border-radius:999px;background:var(--track);overflow:hidden}
+.sym .t>div{height:6px;border-radius:999px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--row);font-size:15px}
+.row .k{flex-grow:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:600}
+
+/* ---------- portrait / narrow ---------- */
+@media (max-aspect-ratio: 1/1), (max-width: 900px){
+  header{flex-wrap:wrap;gap:10px 16px;padding:10px 16px}
+  .prog{order:3;flex-basis:100%}
+  .work{flex-direction:column;padding:14px 16px;gap:14px}
+  aside{width:auto;flex-direction:row;flex-wrap:wrap;overflow:visible;flex-shrink:0}
+  aside>.panel{flex:1 1 300px}
+  aside>#nextInfo{display:none!important}
+  .math{font-size:34px}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols{flex-direction:column}
+  .cols>section.side{width:auto;align-self:stretch}
+  #progress{padding:16px}
+  #consent section{padding:28px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= consent ================= -->
+<div id="consent" class="screen" hidden>
+  <section class="panel" aria-labelledby="cTitle">
+    <div class="ttl">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <h1 id="cTitle">עוזרים ל-Learnink ללמוד כתב יד</h1>
+    </div>
+    <p>על המסך יופיעו תרגילים מוכנים, כולל התוצאה. רק מעתיקים אותם בעט – אין צורך לפתור כלום.</p>
+    <ul>
+      <li>כותבים בקצב רגיל, בלי להשתדל במיוחד.</li>
+      <li>נשמרים רק קווי הכתיבה. בלי שם, בלי תמונה ובלי מיקום.</li>
+      <li>מקבלים מספר כותב אקראי. אפשר לבקש למחוק את כל מה שנכתב.</li>
+      <li>לכותבים בגיל 18 ומעלה.</li>
+      <li>בערך 30 דקות. אפשר לעצור ולהמשיך בכל רגע.</li>
+    </ul>
+    <label><input type="checkbox" id="agree"><span>קראתי את ההסבר, גילי 18 ומעלה ואני מסכים/ה להשתתף</span></label>
+    <button type="button" class="btn primary" id="start" disabled>מתחילים</button>
+  </section>
+</div>
+
+<!-- ================= writing ================= -->
+<div id="main" class="screen" hidden>
+  <header>
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span>Learnink · מאמן כתב יד</span>
+    </div>
+    <div class="prog">
+      <div class="track" role="progressbar" aria-label="התקדמות במפגש" aria-valuemin="0" aria-valuemax="90" id="trackBar"><div id="trackFill"></div></div>
+      <span id="progText">0 מתוך 90 תרגילים · 0 דקות</span>
+    </div>
+    <button type="button" class="link-btn" id="toProgress">לוח התקדמות</button>
+    <span class="pill">מספר כותב <bdi dir="ltr" id="writerLbl">#</bdi></span>
+  </header>
+  <div class="banner info" id="banner" role="status"><span id="bannerText">טוען את המודל…</span></div>
+  <div class="work">
+    <main>
+      <section class="panel prompt" aria-label="התרגיל להעתקה">
+        <div class="hint"><span id="promptHint">להעתיק את התרגיל כמו שהוא, בקצב רגיל, בלי להשתדל במיוחד</span><span class="tag" id="warmTag" hidden>חימום</span></div>
+        <bdi dir="ltr" class="math" id="promptMath"></bdi>
+      </section>
+      <section class="padwrap" aria-label="אזור כתיבה">
+        <canvas id="pad" aria-label="משטח כתיבה בעט"></canvas>
+        <span class="where">לכתוב כאן בעט</span>
+        <div class="live" id="live" aria-live="polite"></div>
+        <div class="idle" id="idle"></div>
+      </section>
+      <div class="bar">
+        <button type="button" class="btn" id="btnClear">ניקוי</button>
+        <button type="button" class="btn" id="btnSkip">טעיתי בהעתקה – דילוג</button>
+        <label class="toggle"><input type="checkbox" id="autoAdv" checked><span>מעבר אוטומטי אחרי הפסקה</span></label>
+        <div class="grow"></div>
+        <button type="button" class="btn primary" id="btnNext">הבא</button>
+      </div>
+    </main>
+    <aside>
+      <section class="panel" id="fbPanel" aria-live="polite">
+        <h2 id="fbTitle">כך קראתי</h2>
+        <div class="small" id="fbEmpty">אחרי הסיום של כל תרגיל, יופיע כאן מה המודל קרא.</div>
+        <div id="fbBody" hidden>
+          <div class="readline" id="fbPrompt"></div>
+          <bdi dir="ltr" class="chips" id="fbChips" style="margin:10px 0"></bdi>
+          <div id="fbMsgs" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div class="small" id="fbSum" style="margin-top:8px"></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>המודל מתבלבל כרגע בין</h2>
+        <bdi dir="ltr" class="conf" id="confList"></bdi>
+        <div class="small" id="confNote">התרגילים הבאים יכללו יותר מהסימנים האלה.</div>
+      </section>
+      <section class="panel" id="nextInfo" style="background:var(--info);border:0">
+        <h2 style="font-size:15px">איפה הדגימות</h2>
+        <div class="small" id="saveInfo">—</div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<!-- ================= progress ================= -->
+<div id="progress" class="screen" hidden>
+  <div class="top">
+    <h1>לוח התקדמות</h1>
+    <span class="pill">מספר כותב <bdi dir="ltr" id="writerLbl2">#</bdi></span>
+    <button type="button" class="btn primary" id="backToWrite" style="min-height:48px;font-size:16px;padding:0 20px">חזרה לכתיבה</button>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <div class="cols">
+    <section class="panel">
+      <h2 style="font-size:18px;font-weight:600">דיוק לפי סימן – הכתב במכשיר הזה</h2>
+      <div class="small">כמה פעמים כל סימן נקרא נכון, בכל המפגשים במכשיר הזה. הסימנים החלשים ראשונים.</div>
+      <div class="symgrid" id="symGrid"></div>
+    </section>
+    <section class="panel side">
+      <h2 style="font-size:18px;font-weight:600">המודל</h2>
+      <dl class="kv" id="modelKv"></dl>
+      <div class="small" id="modelNotes"></div>
+      <h2 style="font-size:18px;font-weight:600;margin-top:8px">בלבולים נפוצים</h2>
+      <div id="confRows" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="small" id="privacyNote"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   Reader: training/handwriting/exp/hw_exp.js (branch wip/hw-algebra), verbatim
+   except that the model is passed in (makeHW(M)) instead of being inlined.
+   ====================================================================== */
+/* EXPERIMENT ONLY – copy of src/js/hw.js with reader-rule changes (tagged EXP1..EXP4). Not used by the app. */
+/* ---------- on-device handwriting recognition (no internet) ---------- */
+function makeHW(M){
+  const L=M.layers.map(l=>{ const bin=atob(l.w), W=new Float32Array(bin.length); for(let i=0;i<bin.length;i++){ let v=bin.charCodeAt(i); if(v>127) v-=256; W[i]=v*l.s; } return {W,b:Float32Array.from(l.b),n:l.in,o:l.out}; });
+  const C=M.classes, LETS=[..."abcdkmnpty"], CX=C.concat(LETS.filter(l=>!C.includes(l))), cv=document.createElement("canvas"); cv.width=cv.height=112; const cx=cv.getContext("2d",{willReadFrequently:true});
+  function pre(strokes){
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const st of strokes) for(const [x,y] of st){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+    const w=Math.max(x1-x0,1e-3), h=Math.max(y1-y0,1e-3), s=20/Math.max(w,h), ox=(28-w*s)/2, oy=(28-h*s)/2, F=4, lw=2.4;
+    cx.setTransform(1,0,0,1,0,0); cx.fillStyle="#000"; cx.fillRect(0,0,112,112); cx.strokeStyle="#fff"; cx.fillStyle="#fff"; cx.lineWidth=lw*F; cx.lineCap="round"; cx.lineJoin="round";
+    for(const st of strokes){ const P=st.map(([x,y])=>[((x-x0)*s+ox)*F,((y-y0)*s+oy)*F]);
+      if(P.length===1){ cx.beginPath(); cx.arc(P[0][0],P[0][1],lw*F/2,0,7); cx.fill(); }
+      else { cx.beginPath(); cx.moveTo(P[0][0],P[0][1]); for(let i=1;i<P.length;i++) cx.lineTo(P[i][0],P[i][1]); cx.stroke(); } }
+    const d=cx.getImageData(0,0,112,112).data, a=new Float32Array(784); let m=0,mx=0,my=0;
+    for(let y=0;y<28;y++) for(let x=0;x<28;x++){ let t=0; for(let dy=0;dy<4;dy++){ const row=((y*4+dy)*112+x*4)*4; t+=d[row]+d[row+4]+d[row+8]+d[row+12]; } const v=t/(16*255); a[y*28+x]=v; m+=v; mx+=v*x; my+=v*y; }
+    if(m<=0) return a; const sx=Math.round(14-mx/m), sy=Math.round(14-my/m), b=new Float32Array(784);
+    for(let y=0;y<28;y++){ const ty=y+sy; if(ty<0||ty>27) continue; for(let x=0;x<28;x++){ const tx=x+sx; if(tx<0||tx>27) continue; b[ty*28+tx]=a[y*28+x]; } }
+    return b; }
+  function forward(a){ let h=a; L.forEach((l,li)=>{ const o=new Float32Array(l.o); for(let j=0;j<l.o;j++){ let s=l.b[j]; const off=j*l.n; for(let i=0;i<l.n;i++) s+=l.W[off+i]*h[i]; o[j]=li<L.length-1?(s>0?s:0):s; } h=o; });
+    let mx=-1e9; for(const v of h) mx=Math.max(mx,v); let z=0; const p=h.map(v=>{ const e=Math.exp(v-mx); z+=e; return e; }); return p.map(v=>v/z); }
+  let PERS=null, PSET=new Set();
+  function setPersonal(cal){ PERS=[]; PSET=new Set(); for(const [ch,list] of Object.entries(cal||{})){ const ci=CX.indexOf(ch); if(ci>=0&&list.length) PSET.add(ci); if(ci<0) continue; for(const strokes of list){ const v=pre(strokes); let n=0; for(const x of v) n+=x*x; PERS.push({ci,v,n:Math.sqrt(n)||1}); } } if(!PERS.length) PERS=null; }
+  function blend(p,v){ let nv=0; for(const x of v) nv+=x*x; nv=Math.sqrt(nv)||1; const sims=[];
+    for(const s of PERS){ let d=0; for(let i=0;i<784;i++) d+=v[i]*s.v[i]; sims.push([d/(nv*s.n),s.ci]); }
+    sims.sort((a,b)=>b[0]-a[0]); const top=sims.slice(0,5).filter(x=>x[0]>0.72); if(!top.length) return p;
+    const vote=new Float32Array(p.length); let tot=0; for(const [s,ci] of top){ const w=(s-0.7)*(s-0.7); vote[ci]+=w; tot+=w; }
+    const conf=Math.min(0.6,(top[0][0]-0.72)*2.2); return p.map((x,i)=>x*(1-conf)+conf*vote[i]/tot); }
+  function classify(strokes,allowed){ const v0=pre(strokes); let p=Array.from(forward(v0)); while(p.length<CX.length) p.push(0); if(PERS) p=Array.from(blend(p,v0)); let best=-1,bp=0,tot=0;
+    let alt=-1,ap=0;
+    // a letter the student has not calibrated: the network's "x" (a letter-like shape) stands in for it
+    if(allowed){ const xi=C.indexOf("x"); for(const l of allowed){ const li=CX.indexOf(l); if(li>=C.length&&!PSET.has(li)&&xi>=0) p[li]=Math.max(p[li],p[xi]*0.9); } }
+    // a calibrated letter the item expects: the network never saw letters, so the student's own samples decide
+    if(allowed&&PERS&&allowed.some(l=>{ const li=CX.indexOf(l); return li>=C.length&&PSET.has(li); })){ let nv=0; for(const x of v0) nv+=x*x; nv=Math.sqrt(nv)||1; let bL=0, bLi=-1, bD=0;
+      for(const q of PERS){ let d=0; for(let i=0;i<784;i++) d+=v0[i]*q.v[i]; d/=nv*q.n; if(q.ci>=C.length){ if(allowed.includes(CX[q.ci])&&d>bL){ bL=d; bLi=q.ci; } } else if(d>bD) bD=d; }
+      if(bLi>=0&&bL>=0.74&&bL>=bD+0.02){ const w=Math.min(0.95,0.6+(bL-0.74)*2.5); p=p.map((x,i)=>i===bLi?w:x*(1-w)); }
+      if(window.__dbgL) window.__dbgL.push([bL.toFixed(3),bD.toFixed(3)]); }
+    CX.forEach((c,i)=>{ if(allowed&&!allowed.includes(c)) return; tot+=p[i]; if(p[i]>bp){ alt=best; ap=bp; bp=p[i]; best=i; } else if(p[i]>ap){ ap=p[i]; alt=i; } });
+    return {ch:CX[best], p:tot>0?bp/tot:0, alt:alt>=0?CX[alt]:null, ap:tot>0?ap/tot:0}; }
+
+  /* ---- layout: strokes → character groups → rows, fractions, exponents ---- */
+  const box=pts=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const [x,y] of pts){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } return {x0,y0,x1,y1,w:x1-x0,h:y1-y0,cx:(x0+x1)/2,cy:(y0+y1)/2}; };
+  const toS=s=>{ const pts=[]; for(let i=0;i<s.p.length;i+=3) pts.push([s.p[i],s.p[i+1]]); return Object.assign({pts},box(pts)); };
+  // a dash: level, or a straight stroke tilted up to ~32° (quick "=" and "-" are often slanted)
+  const isFlat=(s,cH)=>{ if(s.w<=0.28*cH) return false; if(s.h<0.34*Math.max(s.w,1)) return true; if(s._dash!==undefined) return s._dash;
+    const P=s.pts, a=P[0], b=P[P.length-1], dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy); let dev=0;
+    if(L>=0.85*s.w&&Math.abs(dy)<0.62*Math.abs(dx)) for(const [x,y] of P) dev=Math.max(dev,Math.abs((x-a[0])*dy-(y-a[1])*dx)/L); else dev=1e9;
+    return s._dash=(dev<=Math.max(1.2,0.16*L)&&s.h<0.62*s.w); };
+  const isTiny=(s,cH)=>Math.max(s.w,s.h)<0.3*cH;
+  const isDashy=(s,cH)=>isFlat(s,cH)||(s.h<0.5*s.w&&s.w>0.15*cH);   // a short second line of a quick "="
+  function regroup(g){ const b=box(g.strokes.flatMap(s=>[[s.x0,s.y0],[s.x1,s.y1]])); Object.assign(g,b); return g; }
+  function segment(strokes){
+    const S=strokes.map(toS).sort((a,b)=>a.x0-b.x0);
+    const hs=S.filter(s=>s.h>=s.w*0.5).map(s=>s.h).sort((a,b)=>a-b); let cH=hs.length?hs[Math.floor(hs.length*0.75)]:Math.max(20,...S.map(s=>s.w*0.6)); cH=Math.max(8,cH);
+    const groups=[];
+    for(const s of S){ const flat=isFlat(s,cH), tiny=isTiny(s,cH), longBar=flat&&s.w>1.5*cH; let hit=null;
+      if(!longBar) for(const g of groups){ if(g.longBar) continue;
+        const pad=cH*0.12, ov=Math.min(g.x1,s.x1)+pad-(Math.max(g.x0,s.x0)-pad), minw=Math.min(g.w,s.w)+2*pad;
+        const vgap=Math.max(0,Math.max(g.y0,s.y0)-Math.min(g.y1,s.y1)), gFlat=g.strokes.every(q=>isFlat(q,cH)), gTiny=g.strokes.every(q=>isTiny(q,cH));
+        const eqPair=g.strokes.length===1&&(flat&&isDashy(g.strokes[0],cH)||gFlat&&isDashy(s,cH));
+        const lim = (flat&&gFlat||eqPair)?0.65*cH : (tiny&&gTiny)?0.8*cH : (flat||gFlat)?0.12*cH : 0.45*cH;
+        if(ov/minw>=0.5&&vgap<=lim){ hit=g; break; } }
+      if(hit){ hit.strokes.push(s); regroup(hit); } else groups.push(regroup({strokes:[s],longBar})); }
+    const gh=groups.filter(g=>!g.strokes.every(q=>isFlat(q,cH)||isTiny(q,cH))).map(g=>g.h).sort((a,b)=>a-b);
+    if(gh.length) cH=Math.max(8,gh[Math.floor(gh.length*0.6)]);
+    mergePass(groups,cH);
+    return {groups,cH}; }
+  function minDist(A,B){ let m=1e18; for(const s of A.strokes) for(const q of B.strokes){ if(s.x0>q.x1+40||q.x0>s.x1+40) continue;
+      for(let i=0;i<s.pts.length;i++){ const [x,y]=s.pts[i]; for(let j=0;j<q.pts.length;j++){ const dx=x-q.pts[j][0], dy=y-q.pts[j][1], d=dx*dx+dy*dy; if(d<m) m=d; } } } return Math.sqrt(m); }
+  function cls(g){ if(!g._c) g._c=classify(g.strokes.map(s=>s.pts)); return g._c; }
+  // join pieces of one character that were drawn as separate strokes (the bar of a 7, the arm of a 4…)
+  function mergePass(groups,cH){
+    for(let guard=0;guard<60;guard++){ let did=false; groups.sort((a,b)=>a.x0-b.x0);
+      outer: for(let i=0;i<groups.length-1;i++){ const A=groups[i];
+        for(let j=i+1;j<groups.length&&groups[j].x0<A.x1+0.4*cH;j++){ const B=groups[j]; if(A.longBar||B.longBar) continue;
+          if(Math.min(A.y1,B.y1)-Math.max(A.y0,B.y0)< -0.15*cH) continue;
+          const W=Math.max(A.x1,B.x1)-Math.min(A.x0,B.x0), Hh=Math.max(A.y1,B.y1)-Math.min(A.y0,B.y0);
+          if(W>1.15*Math.max(cH,Hh)) continue;
+          const bothTiny=A.strokes.every(q=>isTiny(q,cH))&&B.strokes.every(q=>isTiny(q,cH)); if(bothTiny) continue;
+          if(minDist(A,B)>0.22*cH) continue;
+          const pa=cls(A), pb=cls(B), pm=classify([...A.strokes,...B.strokes].map(s=>s.pts));
+          const frag=x=>x.h<0.6*cH||x.strokes.every(s=>isFlat(s,cH));
+          const xov=Math.min(A.x1,B.x1)-Math.max(A.x0,B.x0), narrow=Math.max(1,Math.min(A.w,B.w));
+          if(pm.p>=0.55&&((frag(A)||frag(B))&&pm.p>=0.6*Math.min(pa.p,pb.p)||xov>=0.3*narrow&&pm.p>Math.max(pa.p,pb.p))){ A.strokes.push(...B.strokes); regroup(A); delete A._c; delete A.ch; groups.splice(j,1); did=true; break outer; } } }
+      if(!did) break; } }
+  // EXP4: confidence of a dash from its straightness and length (1 = long, straight, level)
+  function barConf(s,cH){ const P=s.pts, a=P[0], b=P[P.length-1], dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy)||1; let dev=0;
+    for(const [x,y] of P) dev=Math.max(dev,Math.abs((x-a[0])*dy-(y-a[1])*dx)/L);
+    const straight=Math.max(0,1-dev/(0.25*L)), level=Math.max(0,1-Math.abs(dy)/(0.6*Math.abs(dx)+1e-6)), len=Math.min(1,s.w/(0.45*cH));
+    return Math.max(0.3,Math.min(0.995,0.5+0.5*Math.min(straight,level,len))); }
+  function eqPar(all){ const [a,b]=all, ov=(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0))/Math.max(1,Math.min(a.w,b.w)); return Math.max(0.5,Math.min(1,0.6+0.5*ov)); }
+  function label(g,cH,allowed){
+    if(g.ch) return g;
+    const all=g.strokes;
+    if(all.every(s=>isTiny(s,cH))){ g.ch=all.length>=2?":":"."; g.p=Math.min(0.995,0.6+0.4*(1-Math.max(...all.map(s=>Math.max(s.w,s.h)))/(0.3*cH))); return g; }   // EXP4
+    if(all.every(s=>isFlat(s,cH))){ g.ch=all.length>=2?"=":"-"; g.p=Math.min(...all.map(s=>barConf(s,cH)))*(all.length>=2?eqPar(all):1); return g; }   // EXP4
+    if(all.length===2&&all.every(s=>isDashy(s,cH))&&all.some(s=>isFlat(s,cH))&&Math.abs(all[0].cy-all[1].cy)>=Math.max(all[0].h,all[1].h)*0.6){ g.ch="="; g.p=0.9*Math.min(...all.map(s=>barConf(s,cH)))*eqPar(all); return g; }
+    const r=classify(all.map(s=>s.pts),allowed); g.ch=r.ch; g.p=r.p; g.alt=r.alt; g.ap=r.ap; return g; }
+  // pull fractions out: a flat line with writing right above and below it
+  function fractions(groups,cH,allowed){
+    const out=[]; const used=new Set();
+    for(const f of groups){ if(used.has(f)) continue; if(!f.strokes.every(s=>isFlat(s,cH))||f.strokes.length!==1) continue;
+      const inX=g=>g!==f&&!used.has(g)&&g.cx>=f.x0-0.25*cH&&g.cx<=f.x1+0.25*cH;
+      const up=groups.filter(g=>inX(g)&&g.cy<f.cy&&f.cy-g.y1<0.9*cH&&g.y1<=f.cy+0.1*cH), dn=groups.filter(g=>inX(g)&&g.cy>f.cy&&g.y0-f.cy<0.9*cH&&g.y0>=f.cy-0.1*cH);
+      if(!up.length||!dn.length) continue;
+      if(up.some(g=>f.cy-g.y0>2.2*cH)) continue;          // a column exercise, not a fraction
+      [f,...up,...dn].forEach(g=>used.add(g));
+      const n=rowText(up,cH,allowed), d=rowText(dn,cH,allowed);
+      out.push({frac:true,n,d,x0:Math.min(f.x0,...up.map(g=>g.x0),...dn.map(g=>g.x0)),x1:Math.max(f.x1,...up.map(g=>g.x1),...dn.map(g=>g.x1)),y0:Math.min(...up.map(g=>g.y0)),y1:Math.max(...dn.map(g=>g.y1)),cx:f.cx,cy:f.cy,h:cH,w:f.w,p:Math.min(n.p,d.p)}); }
+    return {rest:groups.filter(g=>!used.has(g)),fr:out}; }
+  // EXP3: "+" is a symmetric cross between two operands; "t" has its bar in the upper part, a longer stem, and is not
+  // squeezed between operands like an operator. Ambiguous → keep the network's pick but lower its confidence.
+  function plusOrT(g,items,cH){ const i=items.indexOf(g), L=items[i-1], R=items[i+1];
+    const S=g.strokes; if(S.length<2){ return; }
+    const bar=S.reduce((a,b)=>(b.w/(b.h+1))>(a.w/(a.h+1))?b:a), stem=S.find(s=>s!==bar)||bar;
+    const barY=(bar.cy-g.y0)/Math.max(1,g.h), sym=Math.abs((stem.cx-bar.x0)/Math.max(1,bar.w)-0.5), tall=stem.h/Math.max(1,bar.w);
+    let tS=0; if(barY<0.4) tS++; if(tall>1.35) tS++; if(sym>0.2) tS++; if(!R||!L) tS++;                  // no operand on one side → not an operator
+    if(g.h>0.85*cH) tS++; if(L&&R&&g.h<0.75*cH) tS--;
+    const want=tS>=3?"t":tS<=1?"+":null;
+    if(want&&want!==g.ch){ g.alt=g.ch; g.ap=g.p*0.5; g.ch=want; g.p=Math.min(g.p,0.8); }
+    else if(!want){ g.p=Math.min(g.p,0.6); } }
+  function rowText(gs,cH,allowed){
+    const items=[...gs].sort((a,b)=>a.x0-b.x0); let s="", p=1, prev=null; const vars=[];
+    for(const g of items){
+      if(g.frac){ if(prev&&/\d$/.test(s)) s+=" "; const st=s.length, t=`${g.n.text}/${g.d.text}`; s+=t; p=Math.min(p,g.p);
+        g.n.alts.forEach(a=>vars.push({st,len:t.length,r:`${a}/${g.d.text}`})); g.d.alts.forEach(a=>vars.push({st,len:t.length,r:`${g.n.text}/${a}`})); prev=g; continue; }
+      label(g,cH,allowed);
+      if((g.ch==="+"||g.ch==="t")&&allowed&&allowed.includes("+")&&allowed.includes("t")) plusOrT(g,items,cH);   // EXP3
+      const exp = prev&&!prev.frac&&/[\da-z)]/.test(prev.ch||"")&&/\d/.test(g.ch)&&g.h<1.1*prev.h&&g.cy<prev.y0+0.25*prev.h&&g.y1<prev.cy+0.1*prev.h&&allowed&&allowed.some(c=>/[a-z]/.test(c));   // EXP2
+      if(exp&&!/\^\d*$/.test(s)) s+="^";
+      if(g.alt&&g.ap>=0.05) vars.push({st:s.length,len:g.ch.length,r:g.alt});
+      s+=g.ch; p=Math.min(p,g.p); if(!exp) prev=g; }
+    return {text:s,p,alts:vars.map(v=>s.slice(0,v.st)+v.r+s.slice(v.st+v.len))}; }
+  function rowsOf(items,cH){ const rows=[]; for(const g of [...items].sort((a,b)=>a.cy-b.cy)){ const r=rows.find(r=>Math.abs(r.cy-g.cy)<0.7*cH); if(r){ r.items.push(g); r.cy=(r.cy*(r.items.length-1)+g.cy)/r.items.length; } else rows.push({cy:g.cy,items:[g]}); } return rows; }
+  const ANS={num:"0123456789",eq:"0123456789x",frac:"0123456789/",factor:"0123456789x",poly:"0123456789x()+",alg:"0123456789()+",algf:"0123456789()+"};
+  const EXP=[..."0123456789+x/()"];
+  /* an answer written after a printed exercise */
+  function readAnswer(strokes,atype,vars){
+    if(!strokes.length) return null;
+    const {groups,cH}=segment(strokes), allowed=[...new Set([...(ANS[atype]||ANS.num),...(vars||[])])], keepMinus=atype==="alg"||atype==="poly";
+    const {rest,fr}=fractions(groups,cH,allowed);   // EXP1: numerator/denominator may hold letters, + ( )
+    const r=rowText([...rest,...fr],cH,allowed);
+    const clean=x=>{ let t=x.replace(/:/g,"").replace(/^=+/,"");
+      t=t.replace(/\.(?!\d)/g,"").replace(/(^|[^\d])\./g,"$1");        // stray dots
+      t=t.replace(/=+/g,"="); if(!keepMinus) t=t.replace(/(^|=)-/g,"$1\u0000").replace(/-/g,"").replace(/\u0000/g,"-");   // a minus only at the start
+      return /[\da-z]/.test(t)?t:""; };
+    const t=clean(r.text), alts=[...new Set(r.alts.map(clean))].filter(a=>a&&a!==t);
+    return {text:t, p:r.p, sure:r.p>=0.5, alts}; }
+  /* exercises the student wrote by hand: horizontal "23+45=68", column form, equations */
+  function readExercises(strokes){
+    const out=[]; if(!strokes.length) return out;
+    const {groups,cH}=segment(strokes); let pool=groups.slice();
+    // column exercises: a long line with two or more rows above it
+    for(const bar of groups.filter(g=>g.longBar)){
+      const inX=g=>g!==bar&&g.cx>=bar.x0-0.6*cH&&g.cx<=bar.x1+0.3*cH;
+      const up=pool.filter(g=>inX(g)&&g.cy<bar.cy&&bar.cy-g.cy<3.6*cH), dn=pool.filter(g=>inX(g)&&g.cy>bar.cy&&g.cy-bar.cy<1.8*cH);
+      const rows=rowsOf(up,cH); if(rows.length<2||!dn.length) continue;
+      let op=null, nums=[], p=1;
+      for(const r of rows){ const its=r.items.sort((a,b)=>a.x0-b.x0); its.forEach(g=>label(g,cH,EXP)); let digits=its;
+        const f=its[0]; if(["+","-","x","/"].includes(f.ch)&&its.length>1){ op=f.ch; digits=its.slice(1); }
+        const t=rowText(digits,cH,[..."0123456789"]); nums.push(t.text); p=Math.min(p,t.p); }
+      if(!op) op="+"; const ans=rowText(dn,cH,[..."0123456789"]);
+      out.push({type:"arith",expr:nums.join(op==="x"?"*":op),answer:ans.text,alts:ans.alts.map(a=>({answer:a})),p:Math.min(p,ans.p),x:Math.max(...dn.map(g=>g.x1)),y:(Math.min(...dn.map(g=>g.y0))+Math.max(...dn.map(g=>g.y1)))/2});
+      pool=pool.filter(g=>g!==bar&&!up.includes(g)&&!dn.includes(g)); }
+    // horizontal lines
+    const {rest,fr}=fractions(pool,cH,[..."0123456789"]);
+    const rows=rowsOf([...rest,...fr],cH);
+    const parsed=rows.map(r=>{ const t=rowText(r.items,cH,EXP); return {t,items:r.items,cy:r.cy}; });
+    for(let i=0;i<parsed.length;i++){ const R=parsed[i], s=R.t.text; if(!s.includes("=")) continue; if(/^x=/.test(s)) continue;
+      const k=s.lastIndexOf("="), left=s.slice(0,k), right=s.slice(k+1);
+      const ansItems=R.items.filter(g=>g.cx>((R.items.find(q=>q.ch==="="&&!q.frac)||{cx:-1}).cx));
+      const next=parsed[i+1];
+      if(/x/.test(left.replace(/(\d|\))x(?=\d|\()/g,"$1*"))||(/x/.test(left)&&next&&/^x=/.test(next.t.text))){
+        // equation with unknown x; the answer is on the next line ("x=5") or missing
+        const a=next&&/^x=/.test(next.t.text)?next.t.text.slice(2):null; const tgt=a!=null?next.items:R.items;
+        out.push({type:"eq",expr:s.replace(/x(?=\d)/g,"x*"),answer:a,p:Math.min(R.t.p,a!=null?next.t.p:1),x:Math.max(...tgt.map(g=>g.x1)),y:a!=null?next.cy:R.cy}); if(a!=null) i++; continue; }
+      const alts=R.t.alts.filter(a=>a.includes("=")).map(a=>{ const q=a.lastIndexOf("="); return {expr:a.slice(0,q).replace(/x/g,"*"),answer:a.slice(q+1)||null}; });
+      out.push({type:"arith",expr:left.replace(/x/g,"*"),answer:right||null,alts,p:R.t.p,x:Math.max(...R.items.map(g=>g.x1)),y:R.cy}); }
+    return out; }
+  return {readAnswer,readExercises,classify,pre,segment,rowsOf,rowText,fractions,setPersonal,knows:ch=>PSET.has(CX.indexOf(ch))};
+}
+
+
+</script>
+<script>
+"use strict";
+/* ---------------- small helpers ---------------- */
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+          set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+function hex(n){ const b=new Uint8Array(n); (self.crypto||window.msCrypto).getRandomValues(b); return [...b].map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase(); }
+function fnv1a(s){ let h=0x811c9dc5; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } return h>>>0; }
+const pct=x=>{ if(x==null||x==="") return "—"; x=Number(x); return isFinite(x)?Math.round(x*100)+"%":"—"; };
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* HTML is only ever built with h`...`: every interpolated value is escaped unless it is already a Raw built the same way. */
+class Raw{ constructor(s){ this.s=s; } }
+const raw=s=>new Raw(s);
+const part=x=>x instanceof Raw?x.s:Array.isArray(x)?x.map(part).join(""):esc(x==null?"":x);
+function h(str,...v){ let o=str[0]; v.forEach((x,i)=>{ o+=part(x)+str[i+1]; }); return raw(o); }
+function setHTML(el,r){ el.innerHTML=part(r); }   // the single HTML sink of this page
+
+/* ---------------- identity / consent ---------------- */
+const CONSENT_KEY="lnkt.consent.v1", WRITER_KEY="lnkt.writer", AUTO_KEY="lnkt.auto", PEN_KEY="lnkt.penSeen";
+const WID=/^[A-Z0-9]{4,8}$/;
+let writerId=null, heldout=false;
+function ensureWriter(){ // validated before display and before every db write; an invalid stored id is replaced
+  if(typeof writerId!=="string"||!WID.test(writerId)){ let w=LS.get(WRITER_KEY,null); if(typeof w!=="string"||!WID.test(w)){ w=hex(4); LS.set(WRITER_KEY,w); } writerId=w; }
+  heldout=fnv1a(writerId)%5===0; return writerId; }
+ensureWriter();
+function cleanStats(o){ const out={sym:{},conf:{}}; if(!o||typeof o!=="object") return out;
+  for(const [k,v] of Object.entries(o.sym||{})) if(k.length<=4&&Array.isArray(v)&&v.length===2&&v.every(n=>Number.isInteger(n)&&n>=0)&&v[0]<=v[1]&&v[1]>0) out.sym[k]=v;
+  for(const [k,v] of Object.entries(o.conf||{})) if(k.length<=12&&k.includes("→")&&Number.isInteger(v)&&v>0) out.conf[k]=v;
+  return out; }
+const sessionId="S"+Date.now().toString(36).toUpperCase()+hex(2);
+const STATS_KEY="lnkt.stats."+writerId;
+const SESSION_GOAL=90, IDLE_MS=2500;
+function uaShort(){ const u=navigator.userAgent||""; const os=(u.match(/Android [\d.]+/)||u.match(/iPad|iPhone|Mac OS X|Windows NT [\d.]+|Linux|CrOS/)||["?"])[0]; const br=(u.match(/(Chrome|Firefox|Version)\/(\d+)/)||[]); return (os+"; "+(br[1]||"?")+" "+(br[2]||"")).trim().slice(0,60); }
+
+/* ---------------- state ---------------- */
+const S={
+  HW:null, meta:null, modelVersion:null,
+  db:null, uid:null, dbState:"connecting",   // connecting | on | off
+  batches:[], nextK:1, flushing:Promise.resolve(), lastFlush:Date.now(), flushEvery:30000, saved:0, failed:0, quota:false, saveErr:null, dropped:0, dropNote:false, mem:[],
+  seq:0, startedAt:Date.now(),
+  ex:null, strokes:[], cur:null, penSeen:!!LS.get(PEN_KEY,false), exStart:0,
+  session:{sym:{},conf:{},n:0,kept:0,discarded:0,exact:0,symOk:0,symN:0},
+  life:cleanStats(LS.get(STATS_KEY,null)),
+  warm:4, auto:LS.get(AUTO_KEY,true)
+};
+
+/* ======================================================================
+   Exercises. Mini-language (always LTR):
+   digits, letters, + - = . ( ) ÷ /,  ^N exponent,  [num/den] stacked fraction,
+   ">" grey arrow (not copied), space = a gap (not copied).
+   The target text the reader should return = the source without [ ] > and spaces.
+   ====================================================================== */
+const CLASSES=[..."0123456789","+","x","/","(",")",..."abcdkmnptysz","÷"];
+const LET=[..."xabcdkmnptysz"];
+const EXTRA=["-","=","."];
+const fmtH=h=>{ const s=(h/100).toFixed(2).replace(/0+$/,"").replace(/\.$/,""); return s; };
+function coef(k,v){ return (k===1?"":k===-1?"-":String(k))+v; }   // 1x -> x, -1x -> -x
+const TPL={
+  add:()=>{ const a=rnd(12,89),b=rnd(11,89); return `${a}+${b}=${a+b}`; },
+  sub:()=>{ const a=rnd(30,99),b=rnd(11,a-3); return `${a}-${b}=${a-b}`; },
+  neg:()=>{ const a=rnd(2,19),b=rnd(a+1,40); return `-${a}+${b}=${b-a}`; },
+  div:()=>{ const b=rnd(2,9),q=rnd(3,15); return `${b*q}÷${b}=${q}`; },
+  slash:()=>{ const b=rnd(2,9),q=rnd(2,12); return `${b*q}/${b}=${q}`; },
+  dec:()=>{ let A; do{ A=rnd(12,95)*10; }while(A%100===0); const B=rnd(105,495); return Math.random()<.5?`${fmtH(A)}+${fmtH(B)}=${fmtH(A+B)}`:(A>B?`${fmtH(A)}-${fmtH(B)}=${fmtH(A-B)}`:`${fmtH(B)}-${fmtH(A)}=${fmtH(B-A)}`); },
+  frac:()=>{ for(;;){ const D=[2,3,4,5,6,8,10], b=pick(D), d=pick(D), a=rnd(1,b-1), c=rnd(1,d-1); if(gcd(a,b)!==1||gcd(c,d)!==1) continue;
+      let n=a*d+c*b, m=b*d, op="+"; if(n>=m){ n=a*d-c*b; op="-"; if(n<=0) continue; } const g=gcd(n,m); n/=g; m/=g; if(m===1) continue; return `[${a}/${b}]${op}[${c}/${d}]=[${n}/${m}]`; } },
+  pow:()=>{ const a=rnd(2,9),b=rnd(2,9); return `${a}^2+${b}^2=${a*a+b*b}`; },
+  eqParen:(v)=>{ v=v||pick(LET); const k=rnd(2,6),c=rnd(1,9),s=rnd(c+1,c+9), plus=Math.random()<.4; return plus?`${k}(${v}+${c})=${k*(s+c)} > ${v}=${s}`:`${k}(${v}-${c})=${k*(s-c)} > ${v}=${s}`; },
+  lin:(v)=>{ v=v||pick(LET); const a=rnd(2,9),b=rnd(1,20),s=rnd(1,12); return Math.random()<.5?`${a}${v}+${b}=${a*s+b} > ${v}=${s}`:(a*s>b?`${a}${v}-${b}=${a*s-b} > ${v}=${s}`:`${a}${v}+${b}=${a*s+b} > ${v}=${s}`); },
+  two:(v)=>{ const v1=v||pick(LET); let v2; do{ v2=pick(LET); }while(v2===v1); const a=rnd(2,9),b=rnd(2,9),x=rnd(1,9),y=rnd(1,9); return `${a}${v1}+${b}${v2}=${a*x+b*y}`; },
+  diffsq:(v)=>{ v=v||pick(LET); const c=rnd(1,9); return `${v}^2-${c*c}=(${v}-${c})(${v}+${c})`; },
+  trinom:(v)=>{ v=v||pick(LET); const p=rnd(1,9),q=rnd(1,9); return `(${v}+${p})(${v}+${q})=${v}^2+${coef(p+q,v)}+${p*q}`; },
+  expand:(v)=>{ v=v||pick(LET); const k=rnd(2,9),c=rnd(1,9); return Math.random()<.5?`${k}(${v}+${c})=${k}${v}+${k*c}`:`${k}(${v}-${c})=${k}${v}-${k*c}`; },
+  factor:(v)=>{ v=v||pick(LET); const c=rnd(2,9); return `${v}^2+${c}${v}=${v}(${v}+${c})`; },
+  fracEq:(v)=>{ v=v||pick(LET); const d=rnd(2,9),q=rnd(2,9); return Math.random()<.5?`[${v}/${d}]=${q} > ${v}=${d*q}`:`[${v}+${q}/${d}]=${q+1} > ${v}=${d*(q+1)-q}`; },
+  divLet:(v)=>{ v=v||pick(LET); const k=rnd(2,9),c=rnd(2,9); return `${k*c}${v}÷${k}=${c}${v}`; },
+  mono:(v)=>{ const v1=v||pick(LET); let v2; do{ v2=pick(LET); }while(v2===v1); const a=rnd(2,9); return `${a}${v1}^2${v2}-${v1}^2${v2}=${coef(a-1,v1+"^2"+v2)}`; },
+};
+const LETTER_TPL=["eqParen","lin","two","diffsq","trinom","expand","factor","fracEq","divLet","mono"];
+const target=src=>src.replace(/[\[\]>\s]/g,"");
+function tokens(text){ const out=[]; for(let i=0;i<text.length;i++){ const c=text[i]; if(/\s/.test(c)) continue; if(c==="^"){ let j=i+1; while(j<text.length&&/\d/.test(text[j])){ out.push("^"+text[j]); j++; } i=j-1; continue; } out.push(c); } return out; }
+// which "/" tokens of a source are stacked-fraction bars (for statistics)
+function barMask(src){ const m=[]; let depth=0; for(let i=0;i<src.length;i++){ const c=src[i]; if(c==="["){ depth++; continue; } if(c==="]"){ depth--; continue; } if(c===">"||/\s/.test(c)) continue;
+    if(c==="^"){ let j=i+1; while(j<src.length&&/\d/.test(src[j])){ m.push(false); j++; } i=j-1; continue; } m.push(c==="/"&&depth>0); } return m; }
+const baseTok=t=>t.replace("^","");
+function symsOf(src){ const s=new Set(); const m=barMask(src); tokens(target(src)).forEach((t,i)=>s.add(m[i]?"bar":baseTok(t))); return s; }
+
+/* per-symbol weakness: prior from the model's frozen-test accuracy (meta.symAcc) + this session's counts */
+function weak(sym){ const pri=S.meta&&S.meta.symAcc&&S.meta.symAcc[sym]!=null?1-S.meta.symAcc[sym]:(EXTRA.includes(sym)||sym==="bar"?0.12:0.3);
+  const st=S.session.sym[sym]||[0,0], k=3; return ((st[1]-st[0])+k*pri)/(st[1]+k); }
+function topConf(n,src){ return Object.entries(src).sort((a,b)=>b[1]-a[1]).slice(0,n); }
+function nextExercise(){
+  if(S.warm>0){ // warm-up: one symbol, three times; weaker symbols more likely
+    S.warm--; const done=new Set(S._warmDone||[]); const cand=CLASSES.filter(c=>!done.has(c)); let tot=0; const w=cand.map(c=>{ const x=weak(c)**2+0.01; tot+=x; return x; });
+    let r=Math.random()*tot, c=cand[0]; for(let i=0;i<cand.length;i++){ r-=w[i]; if(r<=0){ c=cand[i]; break; } }
+    S._warmDone=[...done,c];
+    // the reader needs a digit or a letter next to + ( ) / ÷, so those are practised inside a short expression
+    const a=rnd(2,9), b2=rnd(2,9);
+    const OPW={"+":`${a}+${b2}`,"(":`(${a}+${b2})`,")":`(${a}+${b2})`,"/":`${a*b2}/${b2}`,"÷":`${a*b2}÷${b2}`};
+    if(OPW[c]) return {src:OPW[c],warmup:true,tpl:"warmOp"};
+    return {src:`${c} ${c} ${c}`,warmup:true,tpl:"warm"}; }
+  // focus symbol, sampled by weakness^2; letter focus goes straight into a letter template
+  let tot=0; const W=CLASSES.map(c=>{ const x=weak(c)**2+0.005; tot+=x; return x; }); let r=Math.random()*tot, focus=CLASSES[0];
+  for(let i=0;i<CLASSES.length;i++){ r-=W[i]; if(r<=0){ focus=CLASSES[i]; break; } }
+  const confs=topConf(4,S.session.conf).map(([k])=>k.split("→"));
+  const names=Object.keys(TPL), recent=S.recent||(S.recent=[]), seen=S.session.sym, explore=Math.random()<0.25;
+  let best=null, bestS=-1e9;
+  if(explore){ const tn=pick(names.filter(n=>!recent.includes(n))); best={src:TPL[tn](),tpl:tn,focus:null}; recent.push(tn); if(recent.length>5) recent.shift(); return best; }   // a quarter of the items: any template, for variety
+  for(let i=0;i<36;i++){ const tn=LET.includes(focus)&&i<18?pick(LETTER_TPL):pick(names); if(tn==="mono"&&Math.random()<0.6) continue;
+    const src=TPL[tn](LET.includes(focus)?focus:undefined); const sy=[...symsOf(src)];
+    const w=sy.map(weak).sort((a,b)=>b-a);
+    let sc=(w[0]+(w[1]||0)+(w[2]||0))/3+(sy.includes(focus)?0.6:0);
+    sc+=0.12*Math.min(3,sy.filter(x=>CLASSES.includes(x)&&!seen[x]).length);          // symbols not written yet this session
+    for(const [a,b] of confs) if(sy.includes(a)) sc+=sy.includes(b)?0.3:0.15;           // current confusions
+    const r=recent.lastIndexOf(tn); if(r>=0) sc-=0.5*(r+1)/recent.length;              // variety: recently used templates lose
+    sc+=Math.random()*0.3; if(sc>bestS){ bestS=sc; best={src,tpl:tn,focus}; } }
+  recent.push(best.tpl); if(recent.length>5) recent.shift();
+  return best; }
+
+/* ---------------- rendering math ---------------- */
+function mathHTML(src){ return raw(mathStr(String(src))); }
+function mathStr(src){ let h="", i=0;
+  const atom=c=>/[a-z]/.test(c)?`<i>${c}</i>`:c==="-"?`<span class="op">−</span>`:"+=÷".includes(c)?`<span class="op">${c}</span>`:c==="/"?"/":esc(c);
+  while(i<src.length){ const c=src[i];
+    if(c==="["){ const j=src.indexOf("]",i); const inner=src.slice(i+1,j), k=inner.lastIndexOf("/"); if(j<0){ h+=esc(src.slice(i)); break; } h+=`<span class="fr"><span>${mathStr(inner.slice(0,k))}</span><span>${mathStr(inner.slice(k+1))}</span></span>`; i=j+1; continue; }
+    if(c==="^"){ let j=i+1, d=""; while(j<src.length&&/\d/.test(src[j])) d+=src[j++]; h+=`<sup>${esc(d)}</sup>`; i=j; continue; }
+    if(c===">"){ h+=`<span class="arr" aria-label="לא להעתיק">⟶</span>`; i++; continue; }
+    if(c===" "){ if(src[i-1]!==">"&&src[i+1]!==">") h+=`<span class="gap"></span>`; i++; continue; }
+    h+=atom(c); i++; }
+  return h; }
+function readHTML(text){ return text?raw(tokens(String(text)).map(t=>tokHTML(t).s).join("")):raw("—"); }
+function tokHTML(t){ t=String(t); return t[0]==="^"?h`<sup>${t.slice(1)}</sup>`:t==="-"?raw("−"):h`${t}`; }
+
+/* ---------------- reading + alignment ---------------- */
+function readerArgs(src){ // as the app calls the reader: type "alg" + the letters / signs this item uses
+  const tgt=target(src), m=barMask(src), T=tokens(tgt);
+  const vars=[...new Set(T.filter((t,i)=>/^[a-z]$/.test(t)||t==="÷"||(t==="/"&&!m[i])))];   // a stacked-fraction bar is not a written "/"
+  return {atype:"alg",vars}; }
+function readStrokes(strokes,args){ if(!S.HW||!strokes.length) return null;
+  const inp=strokes.map(st=>({t:"pen",p:st.flatMap(q=>[q[0],q[1],0.5])}));
+  return S.HW.readAnswer(inp,args.atype,args.vars); }
+function align(T,R){ const n=T.length,m=R.length, D=[]; for(let i=0;i<=n;i++){ D.push(new Array(m+1).fill(0)); D[i][0]=i; } for(let j=0;j<=m;j++) D[0][j]=j;
+  for(let i=1;i<=n;i++) for(let j=1;j<=m;j++) D[i][j]=Math.min(D[i-1][j-1]+(T[i-1]===R[j-1]?0:1),D[i-1][j]+1,D[i][j-1]+1);
+  const ops=[]; let i=n,j=m;
+  while(i>0||j>0){ if(i>0&&j>0&&D[i][j]===D[i-1][j-1]+(T[i-1]===R[j-1]?0:1)){ ops.push({t:i-1,r:j-1,ok:T[i-1]===R[j-1]}); i--; j--; }
+    else if(i>0&&D[i][j]===D[i-1][j]+1){ ops.push({t:i-1,r:null,ok:false}); i--; } else { ops.push({t:null,r:j-1,ok:false}); j--; } }
+  return ops.reverse(); }
+function judge(ex,res){
+  const tgt=target(ex.src), T=tokens(tgt), mask=barMask(ex.src), readText=res?res.text:"", R=tokens(readText), ops=align(T,R);
+  const keyOf=i=>mask[i]?"bar":baseTok(T[i]);
+  const perTok=[], errs=[], extra=[], seq=[];
+  for(const o of ops){
+    if(o.t==null){ extra.push(R[o.r]); seq.push({x:R[o.r]}); continue; }
+    const t=T[o.t], r=o.r==null?null:R[o.r]; let key=keyOf(o.t), to=null;
+    if(!o.ok){ if(r==null) to="∅"; else if(baseTok(r)===baseTok(t)){ key="^"; to=r[0]==="^"?"^":"שורה"; } else to=baseTok(r); errs.push({t,r,key,to}); }
+    perTok.push({t,r,ok:o.ok,key,to}); seq.push(perTok[perTok.length-1]); }
+  const exact=!!res&&readText===tgt;
+  return {empty:!readText,tgt,T,R,readText,perTok,errs,extra,seq,exact,altHit:!!res&&!exact&&(res.alts||[]).includes(tgt),conf:res?res.p:0,nOk:perTok.filter(x=>x.ok).length}; }
+
+/* ---------------- statistics ---------------- */
+function bump(obj,key,ok){ const s=obj.sym[key]||(obj.sym[key]=[0,0]); s[1]++; if(ok) s[0]++; }
+function addStats(J){
+  const ss=S.session;
+  for(const p of J.perTok){ for(const o of [ss,S.life]){ bump(o,p.key,p.ok); if(!p.ok){ const k=`${p.key}→${p.to}`; o.conf[k]=(o.conf[k]||0)+1; } } }
+  ss.symOk+=J.nOk; ss.symN+=J.perTok.length; if(J.exact) ss.exact++;
+  LS.set(STATS_KEY,S.life); }
+
+/* ---------------- storage ---------------- */
+// at most ~3000 points / ~60 KB per exercise: thin long strokes first, then taps and short strokes, then (last resort) drop strokes
+const MAX_PTS=3000;
+function compactStrokes(strokes){ let st=strokes.map(s=>s.map(q=>[Math.round(q[0]),Math.round(q[1]),Math.round(q[2]),Math.round(q[3])]));
+  const pts=()=>st.reduce((n,s)=>n+s.length,0), size=()=>JSON.stringify(st).length; let thinned=false;
+  for(let g=0;g<24&&(pts()>MAX_PTS||size()>ITEM_BYTES);g++){ thinned=true;
+    if(st.some(s=>s.length>=3)) st=st.map(s=>s.length<3?s:s.filter((q,i)=>i%2===0||i===s.length-1));
+    else st=st.filter((s,i)=>i%2===0); }
+  while(st.length>1&&size()>ITEM_BYTES){ st.pop(); thinned=true; }
+  return {st,thinned}; }
+/* Exercises are stored in batches: samples/<self>/ex/<sessionId>-b<k> = {items:[...up to 10 exercises]}.
+   A batch is rewritten whole (set) when it fills, on pause / tab hide / pagehide, and every ~30 s while it has unsaved items.
+   A batch is closed early when adding the next exercise would take it past ~150 KB, so every doc stays far below 256 KiB.
+   A failed write keeps its items pending (amber banner, retried by the 30 s timer). A body rejected with invalid_argument is
+   never resent unchanged: its unsaved items move to smaller batches, and a single rejected exercise is dropped with a note. */
+const BATCH_MAX=10, BATCH_BYTES=150000, ITEM_BYTES=60000;
+const enc=new TextEncoder(), bytes=o=>enc.encode(JSON.stringify(o)).length;
+function newBatch(items,closed){ const b={k:S.nextK++,items:items||[],bytes:0,savedN:0,closed:!!closed}; b.bytes=b.items.reduce((n,x)=>n+bytes(x),0); S.batches.push(b); return b; }
+function curBatch(){ const b=S.batches[S.batches.length-1]; return !b||b.closed?newBatch():b; }
+const unsaved=()=>S.batches.reduce((n,b)=>n+b.items.length-b.savedN,0);
+function writeDoc(item){
+  S.mem.push(item); if(S.mem.length>400) S.mem.shift();
+  const sz=bytes(item); let b=curBatch();
+  if(b.items.length&&b.bytes+sz>BATCH_BYTES){ b.closed=true; flush(); b=curBatch(); }
+  b.items.push(item); b.bytes+=sz;
+  if(b.items.length>=BATCH_MAX){ b.closed=true; flush(); }
+  renderSave(); }
+function flush(){ S.flushing=S.flushing.then(flushNow,flushNow); return S.flushing; }
+async function flushNow(){ S.lastFlush=Date.now(); if(S.dbState!=="on") return; ensureWriter();
+  let err=null, quota=false, anyOk=false, droppedNow=false;
+  for(let i=0;i<S.batches.length;i++){ const b=S.batches[i], n=b.items.length; if(b.savedN>=n) continue;
+    const body={kind:"batch",writerId,sessionId,batch:b.k,heldout,modelVersion:S.modelVersion,n,items:b.items.slice(0,n),ts:Date.now()};
+    const r=await putBatch(b.k,body);
+    if(r.ok){ b.savedN=Math.max(b.savedN,n); anyOk=true; continue; }
+    err=r.code||"unavailable"; if(r.code==="quota_exceeded") quota=true;
+    if(r.code==="invalid_argument"||r.code==="transform_error"){
+      const fresh=b.items.slice(b.savedN); b.items=b.items.slice(0,b.savedN); b.closed=true; b.bytes=b.items.reduce((m,x)=>m+bytes(x),0);
+      if(fresh.length>1||b.savedN>0){ const size=b.savedN>0?fresh.length:Math.ceil(fresh.length/2); for(let j=0;j<fresh.length;j+=size) newBatch(fresh.slice(j,j+size),true); }
+      else { S.dropped+=fresh.length; S.dropNote=true; droppedNow=true; console.warn("exercise rejected by the store and dropped",fresh[0]&&fresh[0].id); } } }
+  const left=unsaved(); S.saveErr=left?err:null; S.quota=quota&&left>0; if(anyOk&&!droppedNow&&!err) S.dropNote=false;
+  S.saved=S.batches.reduce((n,b)=>n+b.savedN,0); renderSave(); }
+async function putBatch(k,body){
+  const ref=S.db.collection("samples/"+S.uid+"/ex").doc(`${sessionId}-b${k}`);
+  for(let attempt=0;attempt<2;attempt++){
+    try{ await ref.set(body); return {ok:true}; }
+    catch(e){ const code=e&&e.code;
+      if(code==="unavailable"&&attempt===0){ await new Promise(r=>setTimeout(r,400+Math.random()*900)); continue; }
+      if(code==="revoked"||code==="not_granted"||code==="capability_disabled"||code==="capability_removed"){ S.dbState="off"; }
+      S.failed++; console.warn("save failed",code,e&&e.message); return {ok:false,code}; } }
+  return {ok:false,code:"unavailable"}; }
+async function writerDoc(){ // samples/<self>: lets the owner enumerate writers (the store cannot list sub-collections)
+  ensureWriter(); const ref=S.db.doc("samples/"+S.uid), dev={}; dev[writerId]={heldout,lastTs:Date.now()};
+  try{ await ref.update({devices:dev}); }
+  catch(e){ if(e&&e.code==="invalid_argument"){ try{ await ref.set({kind:"writer",devices:dev}); }catch(e2){ console.warn("writer doc",e2&&e2.code); } } else console.warn("writer doc",e&&e.code); } }
+async function connect(){
+  const C=window.claude;
+  if(!C||typeof C.use!=="function"){ S.dbState="off"; renderSave(); return; }
+  try{
+    const [db,user]=await Promise.all([C.use("db").catch(()=>null),C.use("user").catch(()=>null)]);
+    const uid=user&&typeof user.id==="function"?await user.id().catch(()=>null):null;
+    if(!db||!uid){ S.dbState="off"; renderSave(); return; }
+    S.db=db; S.uid=uid; S.dbState="on"; renderSave();
+    await writerDoc();
+    await flush();
+  }catch(e){ console.warn("connect",e); S.dbState="off"; renderSave(); } }
+
+/* ---------------- canvas ---------------- */
+const pad=$("pad"); let ctx=null, cssW=0, cssH=0;
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function setupCanvas(){ const r=pad.getBoundingClientRect(), dpr=window.devicePixelRatio||1; if(!r.width) return;
+  cssW=r.width; cssH=r.height; pad.width=Math.round(r.width*dpr); pad.height=Math.round(r.height*dpr);
+  if(!ctx){ try{ ctx=pad.getContext("2d",{desynchronized:true,alpha:false}); }catch(e){} if(!ctx) ctx=pad.getContext("2d"); }
+  ctx.setTransform(dpr,0,0,dpr,0,0); redraw(); }
+function redraw(){ if(!ctx) return; ctx.fillStyle=css("--paper")||"#fff"; ctx.fillRect(0,0,cssW,cssH);
+  ctx.strokeStyle=css("--grid")||"#EEF2F7"; ctx.lineWidth=1; ctx.beginPath();
+  for(let x=28;x<cssW;x+=28){ ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,cssH); } for(let y=28;y<cssH;y+=28){ ctx.moveTo(0,y+.5); ctx.lineTo(cssW,y+.5); } ctx.stroke();
+  for(const s of S.strokes) drawStroke(s); if(S.cur) drawStroke(S.cur); }
+const penW=p=>1.4+2.4*(p||0.5);
+function seg(a,b){ ctx.strokeStyle=S._pen||(S._pen=css("--pen")); ctx.lineCap="round"; ctx.lineJoin="round"; ctx.lineWidth=penW(b[3]/100); ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke(); }
+function drawStroke(s){ if(s.length===1){ ctx.fillStyle=S._pen||(S._pen=css("--pen")); ctx.beginPath(); ctx.arc(s[0][0],s[0][1],penW(s[0][3]/100)/2,0,7); ctx.fill(); return; } for(let i=1;i<s.length;i++) seg(s[i-1],s[i]); }
+let activeId=null, idleT=null, liveT=null;
+function ptOf(e){ const r=pad.getBoundingClientRect(); const pr=e.pointerType==="mouse"||!e.pressure?0.5:e.pressure;
+  return [Math.round(e.clientX-r.left),Math.round(e.clientY-r.top),Math.round((e.timeStamp||performance.now())-S.exStart),Math.round(pr*100)]; }
+/* palm rejection: once a pen is seen (remembered on this device) touch is ignored; when a pen goes down, touch strokes of the
+   current exercise (a resting palm before the first pen stroke) are discarded, including one still in progress */
+function accept(e){
+  if(e.pointerType==="pen"){
+    if(!S.penSeen){ S.penSeen=true; LS.set(PEN_KEY,true); }
+    let ch=false; if(S.cur&&S.cur.type==="touch"){ S.cur=null; activeId=null; ch=true; }
+    const n=S.strokes.length; S.strokes=S.strokes.filter(s=>s.type!=="touch"); if(ch||S.strokes.length!==n) redraw();
+    return true; }
+  return !(S.penSeen&&e.pointerType==="touch"); }
+function inputOf(strokes){ const t=[...new Set(strokes.map(s=>s.type||"?"))]; return t.length===1?t[0]:t.length?"mixed":"?"; }
+pad.addEventListener("pointerdown",e=>{ if(!accept(e)||activeId!==null) return; e.preventDefault();
+  activeId=e.pointerId; try{ pad.setPointerCapture(e.pointerId); }catch(_){}
+  if(!S.strokes.length&&!S.cur) S.exStart=e.timeStamp||performance.now();
+  cancelIdle(); clearTimeout(liveT);
+  const p=ptOf(e); S.cur=[p]; S.cur.type=e.pointerType; drawStroke(S.cur); });
+pad.addEventListener("pointermove",e=>{ if(e.pointerId!==activeId||!S.cur) return; e.preventDefault();
+  const evs=typeof e.getCoalescedEvents==="function"?e.getCoalescedEvents():[]; const list=evs&&evs.length?evs:[e];
+  for(const ce of list){ const p=ptOf(ce), last=S.cur[S.cur.length-1]; if(p[0]===last[0]&&p[1]===last[1]) continue; S.cur.push(p); seg(last,p); } });
+function endStroke(e){ if(e.pointerId!==activeId) return; activeId=null; if(!S.cur) return;
+  if(e.type==="pointerup"){ const p=ptOf(e), last=S.cur[S.cur.length-1]; if(p[0]!==last[0]||p[1]!==last[1]){ S.cur.push(p); seg(last,p); } }
+  S.strokes.push(S.cur); S.cur=null; clearTimeout(liveT); liveT=setTimeout(liveRead,200); startIdle(); }
+pad.addEventListener("pointerup",endStroke); pad.addEventListener("pointercancel",endStroke);
+pad.addEventListener("contextmenu",e=>e.preventDefault());
+function startIdle(){ cancelIdle(); if(!S.auto||!S.strokes.length) return; const bar=$("idle"); bar.style.setProperty("--idle-ms",IDLE_MS+"ms"); void bar.offsetWidth; bar.classList.add("run"); idleT=setTimeout(()=>commit(false),IDLE_MS); }
+function cancelIdle(){ clearTimeout(idleT); idleT=null; $("idle").classList.remove("run"); }
+function liveRead(){ if(!S.strokes.length||!S.HW){ $("live").textContent=""; return; } try{ const r=readStrokes(S.strokes,readerArgs(S.ex.src)); setHTML($("live"),r&&r.text?h`נקרא עד עכשיו: <bdi dir="ltr">${readHTML(r.text)}</bdi>`:""); }catch(e){ console.warn(e); } }
+
+/* ---------------- flow ---------------- */
+function loadExercise(ex){ S.ex=ex; S.strokes=[]; S.cur=null; activeId=null; S.exStart=performance.now(); cancelIdle(); $("live").textContent="";
+  setHTML($("promptMath"),mathHTML(ex.src)); $("warmTag").hidden=!ex.warmup;
+  $("promptHint").textContent=ex.tpl==="warmOp"?"חימום: להעתיק את הביטוי הקצר":ex.warmup?"חימום: לכתוב את הסימן שלוש פעמים, עם רווח ביניהם":ex.src.includes(">")?"להעתיק את התרגיל ואת התוצאה – בלי החץ":"להעתיק את התרגיל כמו שהוא, בקצב רגיל, בלי להשתדל במיוחד";
+  fitMath(); redraw(); }
+function fitMath(){ const el=$("promptMath"); el.style.fontSize=""; const max=el.clientWidth; let fs=parseFloat(getComputedStyle(el).fontSize); while(el.scrollWidth>max&&fs>18){ fs-=2; el.style.fontSize=fs+"px"; } }
+function buildDoc(ex,J,res,discarded,dur){
+  const r=pad.getBoundingClientRect(); S.seq++; ensureWriter(); const cs=compactStrokes(S.strokes);
+  return { id:`${sessionId}-${String(S.seq).padStart(4,"0")}`,
+    writerId, sessionId, seq:S.seq, heldout,
+    promptText:ex.src, targetText:J?J.tgt:target(ex.src), targetTokens:tokens(target(ex.src)),
+    strokes:cs.st, thinned:cs.thinned, strokeFormat:"[x,y,tMs,pressure*100] CSS px from canvas top-left, t from first touch",
+    readTokens:J?J.R:null, readText:res?res.text:null, readConf:res?Math.round(res.p*1000)/1000:null, readAlts:res?(res.alts||[]).slice(0,5):null,
+    reader:Object.assign({code:"hw_exp.js@wip/hw-algebra"},readerArgs(ex.src)),
+    exact:J?J.exact:false, discarded, warmup:!!ex.warmup, template:ex.tpl||null,
+    modelVersion:S.modelVersion, input:inputOf(S.strokes),
+    device:{w:Math.round(r.width),h:Math.round(r.height),sw:screen.width,sh:screen.height,dpr:window.devicePixelRatio||1,ua:uaShort()},
+    durMs:Math.round(dur), ts:Date.now() }; }
+function commit(discard){
+  cancelIdle(); clearTimeout(liveT);
+  const ex=S.ex, has=S.strokes.length>0, dur=S.strokes.length?S.strokes[S.strokes.length-1].slice(-1)[0][2]:0;
+  if(has){
+    let res=null; try{ res=readStrokes(S.strokes,readerArgs(ex.src)); }catch(e){ console.warn("read",e); }
+    const J=S.HW?judge(ex,res):null;
+    const doc=buildDoc(ex,J,res,!!discard,dur);
+    S.session.n++;
+    if(discard) S.session.discarded++; else { S.session.kept++; if(J&&!J.empty) addStats(J); }   // "nothing read" is not a symbol error
+    if(!discard&&J) showFeedback(ex,J); else if(discard) showSkipped(ex);
+    writeDoc(doc);
+  }
+  loadExercise(nextExercise()); renderHeader(); renderConf(); }
+function showSkipped(ex){ $("fbEmpty").hidden=true; $("fbBody").hidden=false; $("fbTitle").textContent="התרגיל דולג";
+  setHTML($("fbPrompt"),h`התרגיל: <bdi dir="ltr">${mathHTML(ex.src)}</bdi>`); $("fbChips").textContent=""; setHTML($("fbMsgs"),h`<div class="msg ok">נשמר כ"טעות העתקה" – לא ייכנס לאימון.</div>`); $("fbSum").textContent=""; }
+function showFeedback(ex,J){
+  $("fbEmpty").hidden=true; $("fbBody").hidden=false; $("fbTitle").textContent="כך קראתי";
+  setHTML($("fbPrompt"),h`התרגיל: <bdi dir="ltr">${mathHTML(ex.src)}</bdi>`);
+  setHTML($("fbChips"),J.seq.map(p=>p.x!=null?h`<span class="chip extra" title="סימן מיותר">${tokHTML(p.x)}</span>`
+    :h`<span class="chip${p.ok?"":" bad"}" title="${p.ok?"נכון":p.r==null?"לא נקרא":"נקרא "+p.r}">${tokHTML(p.t)}</span>`));
+  const M=[]; const show=t=>h`<bdi dir="ltr">${tokHTML(t)}</bdi>`;
+  if(J.empty) M.push(h`לא נקרא כלום. אפשר לכתוב קצת יותר גדול. זה לא נספר כטעות של סימן`);
+  else { for(const e of J.errs.slice(0,3)){
+      if(e.key==="^") M.push(e.to==="^"?h`${show(baseTok(e.t))} נקרא כחזקה`:h`${show(baseTok(e.t))} לא נקרא כחזקה`);
+      else if(e.r==null) M.push(h`${show(e.t)} לא נקרא`);
+      else M.push(h`${show(e.t)} נקרא כ-${show(e.r)}`); }
+    if(J.errs.length>3) M.push(h`ועוד ${J.errs.length-3} סימנים`);
+    if(J.extra.length) M.push(h`נקרא סימן מיותר: ${J.extra.slice(0,3).map(x=>[show(x),raw(" ")])}`); }
+  setHTML($("fbMsgs"),M.length?h`<div class="msg bad">${M.map((m,i)=>i?[raw("<br>"),m]:m)}. ${J.empty?"":"המודל ילמד מזה בסבב הבא."}</div>`:h`<div class="msg ok">הכול נקרא נכון.</div>`);
+  setHTML($("fbSum"),h`${J.nOk} מתוך ${J.T.length} סימנים נכונים · ${J.exact?h`<b>התשובה נקראה במלואה</b>`:"התשובה לא נקראה במלואה"+(J.altHit?" (נמצאה בין החלופות)":"")} · ביטחון ${pct(J.conf)}${J.conf<0.5?" (לא בטוח)":""}<br>נקרא: <bdi dir="ltr">${readHTML(J.readText)}</bdi>`); }
+
+/* ---------------- header / side ---------------- */
+function renderHeader(){ const n=S.session.n, mins=Math.round((Date.now()-S.startedAt)/60000);
+  $("trackFill").style.width=Math.min(100,n/SESSION_GOAL*100)+"%"; $("trackBar").setAttribute("aria-valuenow",n);
+  $("progText").textContent=`${n} מתוך ${SESSION_GOAL} תרגילים · ${mins} דקות`; }
+function renderConf(){ const ses=topConf(4,S.session.conf); let list, note;
+  const fmt=k=>{ const [a,b]=k.split("→"); if(a==="^") return b==="^"?"נקרא כחזקה בטעות":"חזקה נקראה בשורה"; const A=symName(a); return b==="∅"?`${A} חסר`:`${A} ↔ ${symName(b)}`; };
+  if(ses.length){ list=ses.map(([k,n])=>fmt(k)+(n>1?` ×${n}`:"")); note="מהמפגש הזה. התרגילים הבאים יכללו יותר מהסימנים האלה."; }
+  else if(S.meta&&S.meta.topConf){ list=S.meta.topConf.slice(0,4).map(([k])=>fmt(k)); note="מהבדיקות של המודל. התרגילים הבאים יכללו יותר מהסימנים האלה."; }
+  else { list=[]; note="עוד אין מספיק נתונים."; }
+  setHTML($("confList"),list.map(t=>h`<span>${t}</span>`)); $("confNote").textContent=note; }
+function renderSave(){ const b=$("banner"), t=$("bannerText");
+  if(S.modelErr){ b.className="banner warn"; t.textContent="המודל לא נטען – הכתיבה נשמרת, אבל אין משוב."; }
+  else if(S.dbState==="off"){ b.className="banner warn"; t.textContent="לא מחובר – הדגימות לא נשמרות"; }
+  else if(S.quota&&unsaved()){ b.className="banner warn"; t.textContent=`מקום האחסון מלא – ${unsaved()} תרגילים ממתינים ולא נשמרים. כדאי לעדכן את אברם.`; }
+  else if(S.saveErr&&unsaved()){ b.className="banner warn"; t.textContent=`השמירה נכשלה – ${unsaved()} תרגילים ממתינים, ננסה שוב`; }
+  else if(S.dropNote){ b.className="banner warn"; t.textContent=`${S.dropped===1?"תרגיל אחד היה גדול מדי למאגר ולא נשמר":"חלק מהתרגילים היו גדולים מדי למאגר ולא נשמרו ("+S.dropped+" עד עכשיו)"}. אפשר להמשיך.`; }
+  else if(S.meta){ const m=S.meta.metrics||{}; b.className="banner ok"; setHTML(t,h`מודל גרסה ${S.meta.version} · תשובות שנקראו במלואן בבדיקה: <b>${pct(m.answerAcc)}</b> · סימנים: <b>${pct(m.symbolAcc)}</b>${S.dbState==="connecting"?" · מתחבר לאחסון…":""}`); }
+  else { b.className="banner info"; t.textContent=S.HW?"המודל נטען":"טוען את המודל…"; }
+  const kept=S.mem.length;
+  $("saveInfo").textContent=S.dbState==="on"?`${S.saved} תרגילים נשמרו במאגר המרכזי${unsaved()?` · ${unsaved()} ממתינים לשמירה`:""}. הם ישמשו לסבב האימון הבא.${S.dropped?` ${S.dropped} תרגילים לא נשמרו כי המאגר דחה אותם.`:""}`
+    :S.dbState==="connecting"?`מתחבר… ${unsaved()} ממתינים לשמירה.`:`${kept} תרגילים בזיכרון של הדף בלבד. הם יימחקו כשסוגרים את הדף.`; }
+
+/* ---------------- progress screen ---------------- */
+function symName(k){ return k==="bar"?"קו שבר":k==="^"?"חזקה":k==="-"?"−":k; }
+function renderProgress(){
+  const ss=S.session, mins=Math.round((Date.now()-S.startedAt)/60000), M=S.meta||{}, mt=M.metrics||{};
+  const tiles=[
+    {l:"תרגילים במפגש",v:ss.n,s:`${ss.kept} נספרו · ${ss.discarded} טעויות העתקה`},
+    {l:"תשובות שנקראו במלואן",v:ss.kept?pct(ss.exact/ss.kept):"—",s:`${ss.exact} מתוך ${ss.kept}`},
+    {l:"סימנים שנקראו נכון",v:ss.symN?pct(ss.symOk/ss.symN):"—",s:`${ss.symOk} מתוך ${ss.symN}`},
+    {l:"זמן במפגש",v:mins+" דק׳",s:S.dbState==="on"?`${S.saved} נשמרו במאגר`:"לא מחובר – לא נשמר"}];
+  setHTML($("tiles"),tiles.map(t=>h`<div class="panel tile"><div class="l">${t.l}</div><div class="v m">${t.v}</div><div class="s">${t.s}</div></div>`));
+  const life=Object.entries(S.life.sym).map(([k,[ok,n]])=>({k,ok:Number(ok),n:Number(n),a:Number(ok)/Number(n)})).filter(x=>x.n>0).sort((a,b)=>a.a-b.a||b.n-a.n);
+  setHTML($("symGrid"),life.length?life.map(x=>{ const col=x.a>=0.9?"var(--ok)":x.a>=0.6?"var(--accent)":"var(--bad)", w=Math.max(0,Math.min(100,Math.round(x.a*100)));
+      return h`<div class="sym"><div class="h"><bdi dir="ltr" class="c">${symName(x.k)}</bdi><span class="n m">${x.ok}/${x.n}</span></div><div class="t" role="img" aria-label="${pct(x.a)}"><div style="width:${w}%;background:${col}"></div></div><div class="n">${pct(x.a)}</div></div>`; })
+    :h`<div class="small">עוד אין נתונים – הם יופיעו אחרי כמה תרגילים.</div>`);
+  const cf=topConf(8,S.life.conf);
+  setHTML($("confRows"),cf.length?cf.map(([k,n])=>{ const [a,b]=k.split("→"); n=Number(n);
+      const lbl=a==="^"?(b==="^"?"נקרא כחזקה בטעות":"חזקה נקראה בשורה"):b==="∅"?h`<bdi dir="ltr">${symName(a)}</bdi> לא נקרא`:h`<bdi dir="ltr">${symName(a)}</bdi> נקרא כ-<bdi dir="ltr">${symName(b)}</bdi>`;
+      return h`<div class="row"><span class="k">${lbl}</span><span class="muted">${n===1?"פעם אחת":n+" פעמים"}</span></div>`; })
+    :h`<div class="small">עוד אין בלבולים.</div>`);
+  setHTML($("modelKv"),M.version!=null?h`<dt>גרסה</dt><dd class="m">${M.version}${M.name?` (${M.name})`:""}</dd>
+    <dt>עודכן</dt><dd class="m"><bdi dir="ltr">${String(M.trainedAt||"").slice(0,16).replace("T"," ")}</bdi></dd>
+    <dt>תשובות שנקראו במלואן</dt><dd class="m">${pct(mt.answerAcc)}</dd>
+    <dt>סימנים בודדים</dt><dd class="m">${pct(mt.symbolAcc)}</dd>
+    <dt>סימון ✗ בטעות</dt><dd class="m">${mt.falseX==null||!isFinite(Number(mt.falseX))?"—":(Number(mt.falseX)*100).toFixed(1)+"%"}</dd>`:h`<dt>מודל</dt><dd>לא נטען</dd>`);
+  $("modelNotes").textContent=M.notes||"";
+  ensureWriter();
+  setHTML($("privacyNote"),h`מספר הכותב במכשיר הזה: <bdi dir="ltr">#${writerId}</bdi>.${heldout?" הכתב במכשיר הזה משמש לבדיקת המודל בלבד, לא לאימון.":""} למחיקת כל מה שנכתב, אפשר לשלוח את המספר הזה לאברם.`); }
+function show(id){ for(const s of ["consent","main","progress"]) $(s).hidden=s!==id; if(id==="main"){ requestAnimationFrame(()=>{ setupCanvas(); fitMath(); }); } if(id==="progress") renderProgress(); }
+
+/* ---------------- wiring ---------------- */
+$("agree").addEventListener("change",e=>{ $("start").disabled=!e.target.checked; });
+$("start").addEventListener("click",()=>{ if(!$("agree").checked) return; LS.set(CONSENT_KEY,{at:Date.now(),v:1}); startMain(); });
+$("btnNext").addEventListener("click",()=>commit(false));
+$("btnSkip").addEventListener("click",()=>commit(true));
+$("btnClear").addEventListener("click",()=>{ S.strokes=[]; S.cur=null; activeId=null; cancelIdle(); $("live").textContent=""; redraw(); });
+$("autoAdv").addEventListener("change",e=>{ S.auto=e.target.checked; LS.set(AUTO_KEY,S.auto); if(!S.auto) cancelIdle(); else startIdle(); });
+$("toProgress").addEventListener("click",()=>{ cancelIdle(); flush(); show("progress"); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") flush(); });
+window.addEventListener("pagehide",()=>flush());
+$("backToWrite").addEventListener("click",()=>show("main"));
+window.addEventListener("resize",()=>{ if(!$("main").hidden){ setupCanvas(); fitMath(); } });
+if(window.matchMedia) try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ S._pen=null; redraw(); }); }catch(e){}
+$("writerLbl").textContent=$("writerLbl2").textContent="#"+ensureWriter();
+$("autoAdv").checked=S.auto;
+
+let started=false;
+function startMain(){ if(started){ show("main"); return; } started=true; show("main"); loadExercise(nextExercise()); renderHeader(); renderConf(); renderSave(); connect(); setInterval(renderHeader,30000);
+  setInterval(()=>{ if(unsaved()&&Date.now()-S.lastFlush>=S.flushEvery) flush(); },1000); }
+async function loadModel(){
+  try{ const r=await fetch("model/meta.json",{cache:"no-cache"}); if(r.ok){ S.meta=await r.json(); S.modelVersion=S.meta.version; } }catch(e){ console.warn("meta",e); }
+  try{ const r=await fetch("model/current.json",{cache:"no-cache"}); if(!r.ok) throw new Error("HTTP "+r.status); const M=await r.json(); S.HW=makeHW(M); }
+  catch(e){ console.warn("model",e); S.modelErr=true; }
+  renderSave(); renderConf(); }
+S.ready=loadModel();
+if(LS.get(CONSENT_KEY,null)) startMain(); else show("consent");
+
+/* test hooks (harmless in production) */
+window.__trainer={S,setPrompt(src){ loadExercise({src,tpl:"test"}); },gen:()=>nextExercise(),flush:()=>flush(),writeDoc,target,tokens,judge,readStrokes,readerArgs,symsOf,commit};
+</script>
+</body>
+</html>

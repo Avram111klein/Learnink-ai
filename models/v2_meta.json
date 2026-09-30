@@ -1,0 +1,115 @@
+{
+ "version": 2,
+ "name": "r4",
+ "trainedAt": "2026-09-30T06:21:56Z",
+ "metrics": {
+  "answerAcc": 0.0909,
+  "symbolAcc": 0.7146,
+  "falseX": 0.0606
+ },
+ "detail": {
+  "source": "hwdata/round1 – owner TEST split (33 exercises, never trained on), reader = hw_exp.js",
+  "answerAcc": "exact whole answers on the owner's TEST exercises (n=33)",
+  "symbolAcc": "token accuracy on the owner's TEST exercises (aligned like the trainer's judge)",
+  "falseX": "sure (p>=0.5), well-formed, same shape, but wrong – owner TEST",
+  "r3_same_test": {
+   "answerAcc": 0.0303,
+   "symbolAcc": 0.5684,
+   "falseX": 0.0606
+  },
+  "frozen": {
+   "realSym": 0.7462,
+   "synthSym": 0.9655,
+   "penExprExact": 0.672
+  },
+  "digits": {
+   "single": 0.96,
+   "triple": 0.9173,
+   "n": 400
+  },
+  "mnist": {
+   "digitsOnly": 0.983,
+   "allClasses": 0.9764
+  },
+  "trainedOn": "r3 + owner's train-fit symbols (572 labelled, augmented) + replay of the synthetic/MNIST mix; no CROHME",
+  "caveat": "gains are mostly personal to one writer; TEST is only 33 exercises"
+ },
+ "symAccTestCounts": {
+  "1": 26,
+  "=": 38,
+  "z": 5,
+  "2": 40,
+  "+": 55,
+  "n": 4,
+  "3": 16,
+  "6": 10,
+  "/": 6,
+  "7": 20,
+  ")": 33,
+  "9": 13,
+  "b": 23,
+  "(": 33,
+  "8": 12,
+  "4": 14,
+  "d": 20,
+  "p": 4,
+  "-": 11,
+  "s": 4,
+  "x": 12,
+  "5": 14,
+  "t": 4,
+  "k": 3,
+  "c": 2,
+  "0": 2,
+  "y": 2,
+  ".": 3,
+  "a": 2
+ },
+ "topConf": [
+  [
+   "(→∅",
+   9
+  ],
+  [
+   "+→∅",
+   8
+  ],
+  [
+   "^2→8",
+   8
+  ],
+  [
+   "^2→∅",
+   7
+  ],
+  [
+   "b→∅",
+   6
+  ],
+  [
+   "=→∅",
+   5
+  ],
+  [
+   ")→∅",
+   5
+  ],
+  [
+   "d→∅",
+   5
+  ]
+ ],
+ "history": [
+  {
+   "version": 1,
+   "answerAcc": 0.068,
+   "published": true
+  },
+  {
+   "version": 2,
+   "answerAcc": 0.0909,
+   "published": false
+  }
+ ],
+ "notes": "גרסה 2: המודל למד מהכתב שלך, וקורא עכשיו נכון יותר סימנים (בעיקר +, s, a, d)."
+}
