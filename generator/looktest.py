@@ -1,4 +1,4 @@
-"""Blind look-test (usage: looktest.py <samples.jsonl.gz> <outdir> <seed> [previous_KEY.json to avoid its real items]): 24 synthetic + 24 real TRAIN exercises, same renderer, shuffled -> looktest/lt_XX.png; key outside the folder; numbered contact sheet."""
+"""Blind look-test (usage: looktest.py <samples.jsonl.gz> <outdir> <seed> [prev_KEY.json[,prev2_KEY.json...] to avoid their real items]): 24 synthetic + 24 real TRAIN exercises, same renderer, shuffled -> looktest/lt_XX.png; key outside the folder; numbered contact sheet."""
 import json, gzip, glob, random, os, sys
 SRC, OUT, SEED = sys.argv[1], sys.argv[2], int(sys.argv[3]); PREV = sys.argv[4] if len(sys.argv) > 4 else None
 from PIL import Image, ImageDraw, ImageFont
@@ -10,7 +10,7 @@ assert not any(x['id'] in TEST for x in real)
 syn = [json.loads(l) for l in gzip.open(SRC, 'rt')]
 r = random.Random(SEED)
 if PREV:
-    used = {v['id'] for v in json.load(open(PREV)).values() if v['kind'] == 'real'}; real = [x for x in real if x['id'] not in used]
+    used = {v['id'] for p in PREV.split(',') for v in json.load(open(p)).values() if v['kind'] == 'real'}; real = [x for x in real if x['id'] not in used]
 pick = [('real', x) for x in r.sample(real, 24)] + [('synthetic', x) for x in r.sample(syn, 24)]
 r.shuffle(pick)
 os.makedirs(OUT, exist_ok=True)

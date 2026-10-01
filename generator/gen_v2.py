@@ -1,9 +1,4 @@
-"""v3 (look-test 2: stroke texture): no per-point wobble; each source stroke is first smoothed in its own pixel units (its
-1-px quantisation would otherwise be magnified by rescaling), the glyph gets one gentle smooth bend (spline through a couple of
-control points), per-symbol slant/scale/speed jitter, and after all transforms every stroke is lightly smoothed and re-chained
-at the owner's point spacing (8-connected integer steps of 1 / 1.41 px, as the real canvas records them).
-
-v2 (after the blind look-test): powers anchored top-right of the base box with the owner's raise/scale and no overlap;
+"""v2 (after the blind look-test): powers anchored top-right of the base box with the owner's raise/scale and no overlap;
 light touching only (no deep overlaps); every sample normalised to its class height and baseline (operators mid-line);
 one sample per letter per exercise; malformed bank samples dropped by an outlier check against the class centroid.
 
@@ -21,37 +16,6 @@ BANK = json.load(gzip.open(HERE + '/bank.json.gz', 'rt'))
 STY = json.load(open(HERE + '/style.json'))
 SYM = BANK['symbols']
 OPS = set('+-=÷')
-
-def _smooth(A, w):
-    """moving average along a stroke (window w, shrinking at the ends; endpoints kept)"""
-    n = len(A)
-    if n < 3 or w < 2: return A
-    h = w // 2; c = np.cumsum(np.vstack([np.zeros((1, A.shape[1])), A]), 0); out = A.copy()
-    for i in range(1, n - 1):
-        k = min(h, i, n - 1 - i); out[i] = (c[i + k + 1] - c[i - k]) / (2 * k + 1)
-    return out
-
-def _chain(st, step=0.9, seed=0, sub=0.12):
-    """resample a float stroke [[x,y,t,p]] along its arc every `step` px, add sub-pixel pen noise (sd `sub` px, below one
-    pixel: it only decides which pixel a sample lands on, like the real digitiser), round, drop repeats, fill any gap
-    so the result is an 8-connected integer chain like the owner's recorded strokes"""
-    A = np.array(st, float)
-    if len(A) < 2: return [[int(math.floor(A[0, 0] + .5)), int(math.floor(A[0, 1] + .5)), A[0, 2], A[0, 3]]]
-    d = np.r_[0, np.cumsum(np.hypot(*np.diff(A[:, :2], axis=0).T))]
-    if d[-1] < 1e-6: return [[int(math.floor(A[0, 0] + .5)), int(math.floor(A[0, 1] + .5)), A[0, 2], A[0, 3]]]
-    s = np.linspace(0, d[-1], max(2, int(math.ceil(d[-1] / step)) + 1))
-    R = np.c_[[np.interp(s, d, A[:, j]) for j in range(4)]].T
-    R[:, :2] += np.random.default_rng(seed).normal(0, sub, (len(R), 2))
-    out = []
-    for x, y, t, p in R:
-        q = [int(math.floor(x + .5)), int(math.floor(y + .5)), t, p]
-        if out:
-            if q[:2] == out[-1][:2]: continue
-            a = out[-1]; n = max(abs(q[0] - a[0]), abs(q[1] - a[1]))
-            for j in range(1, n):   # keep 8-connectivity
-                f = j / n; out.append([int(math.floor(a[0] + (q[0] - a[0]) * f + .5)), int(math.floor(a[1] + (q[1] - a[1]) * f + .5)), a[2] + (t - a[2]) * f, p])
-        out.append(q)
-    return out
 
 def _raster(s, n=20):
     """sample -> n x n bitmap (bbox-fitted, aspect kept), for the outlier check"""
@@ -98,7 +62,6 @@ for _c, _v in MAIN.items():
                         cy=float(np.median([(s['top'] + s['bot']) / 2 for s in _v])), w=float(np.median([s['w'] for s in _v])))
 POW2 = [p for p in POWS if p.get('rel_top') is not None]
 PSCALE = float(np.median([p['scale'] for p in POWS]))
-SLANT_SD = 0.5 * STY['slant']['std']   # per-symbol slant jitter around the exercise's slant (half the owner's between-exercise spread)
 
 def kind(c):
     return 'f' if c == 'frac' else 'd' if c.isdigit() else 'l' if c.isalpha() else 'o' if c == '(' else 'c' if c == ')' else 'p' if c == '.' else 'op'
@@ -126,7 +89,7 @@ class Ex:
         (centre for operators), then only small jitter. pow_h: rescale to this height, bottom at 0."""
         r = self.r; D = self.D * scale
         ang = math.radians(r.uniform(-4, 4) * 0.6 + self.rot0) + KROT * (math.atan(self.slope) - math.atan(s['slope']))
-        sh = self.shear0 + r.gauss(0, SLANT_SD); k = min(1.08, max(0.92, 1 + r.gauss(0, 0.04)))
+        sh = self.shear0 + r.uniform(-0.06, 0.06); k = min(1.08, max(0.92, 1 + r.gauss(0, 0.04)))
         f, dy = 1.0, 0.0
         if pow_h is not None:
             f = pow_h / max(s['h'], 0.05); dy = -s['bot'] * f
@@ -136,12 +99,7 @@ class Ex:
             f = min(2.0, max(0.5, f))
             if norm in OPS: dy = N['cy'] + r.gauss(0, 0.03) - (s['top'] + s['bot']) / 2 * f
             else: dy = N['bot'] + r.gauss(0, 0.03) - s['bot'] * f
-        Dsrc = s.get('D', 36.0)   # source exercise's digit height: its strokes were 1-px chains at that scale
-        P = [(_smooth(np.array([[p[0], p[1]] for p in st], float) * Dsrc, 5) / Dsrc * f + [0, dy]) * [k * xscale, k] for st in s['s']]
-        dash = norm in ('-', '=') or s.get('role') == 'bar'
-        Q = np.vstack(P); gx0, gy0 = Q.min(0); gw, gh = np.maximum(np.ptp(Q, 0), 1e-3)
-        bend = (0.25 if dash else 1.0) * 0.02 * max(gw, gh)
-        cu = np.linspace(0, 1, 3); bx_ = np.array([r.uniform(-1, 1) for _ in range(3)]) * bend; by_ = np.array([r.uniform(-1, 1) for _ in range(3)]) * bend
+        P = [(np.array([[p[0], p[1]] for p in st], float) * f + [0, dy]) * [k * xscale, k] for st in s['s']]
         allp = np.vstack(P); c = allp.mean(0)
         ca, sa = math.cos(ang), math.sin(ang)
         out = []
@@ -149,9 +107,9 @@ class Ex:
             q = st - c; q = np.c_[q[:, 0] + sh * q[:, 1], q[:, 1]]
             q = np.c_[ca * q[:, 0] - sa * q[:, 1], sa * q[:, 0] + ca * q[:, 1]] + c
             n = len(q)
-            # one smooth bend for the whole glyph: x shifts smoothly with height, y with width (quadratic through 3 control values)
-            v = (q[:, 1] - gy0) / gh; u = (q[:, 0] - gx0) / gw
-            q = q + np.c_[np.polyval(np.polyfit(cu, bx_, 2), v), np.polyval(np.polyfit(cu, by_, 2), u)]
+            if n > 3:   # smooth low-frequency wobble + tiny tremor
+                u = np.linspace(0, 1, n); amp = r.uniform(0, 0.012)
+                q = q + amp * np.c_[np.sin(2 * math.pi * (u * r.uniform(0.5, 1.5) + r.random())), np.sin(2 * math.pi * (u * r.uniform(0.5, 1.5) + r.random()))]
             q = q * D
             out.append([[q[i, 0], q[i, 1], raw[i][2], raw[i][3]] for i in range(n)])
         return out
@@ -163,9 +121,9 @@ class Ex:
         """shift into place, stamp times (writing order = call order), record"""
         r = self.r; out = []
         if self.parts: self.t += max(40, r.choice(PAUSES)) * self.speed
-        t0 = self.t; sp = self.speed * r.uniform(0.9, 1.1)
+        t0 = self.t
         for st in strokes:
-            out.append([[p[0] + dx, p[1] + dy, t0 + p[2] * sp, p[3]] for p in st])
+            out.append([[p[0] + dx, p[1] + dy, t0 + p[2] * self.speed, p[3]] for p in st])
         self.t = max(p[2] for st in out for p in st)
         self.parts.append(out); return self.box(out)
 
@@ -312,9 +270,7 @@ class Ex:
         f = min(1.0, (self.cw - 12 - x0) / max(1, x1 - x0) if x1 > self.cw - 12 else 1.0)
         out = []
         for st in S:
-            A = np.array([[x0 + (p[0] - x0) * f, y0 + (p[1] - y0) * f, p[2], p[3] * self.pk] for p in st], float)
-            A[:, :2] = _smooth(A[:, :2], 3)                       # light smoothing after all transforms
-            out.append([[x, y, int(round(t)), int(min(100, max(1, round(p))))] for x, y, t, p in _chain(A, seed=self.r.getrandbits(32))])
+            out.append([[round(x0 + (p[0] - x0) * f), round(y0 + (p[1] - y0) * f), round(p[2]), int(min(100, max(1, round(p[3] * self.pk))))] for p in st])
         A = np.array([p[:2] for st in out for p in st]); dy = 0
         if A[:, 1].min() < 6: dy = 6 - A[:, 1].min()
         elif A[:, 1].max() > self.ch - 6: dy = max(6 - A[:, 1].min(), self.ch - 6 - A[:, 1].max())
