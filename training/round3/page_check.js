@@ -1,0 +1,12 @@
+const { chromium } = require('playwright'); const fs=require('fs');
+(async()=>{ const b=await chromium.launch(); const p=await b.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+  await p.route('**/model/current.json',r=>r.fulfill({body:fs.readFileSync(process.argv[3]),contentType:'application/json'}));
+  await p.route('**/model/meta.json',r=>r.fulfill({body:fs.readFileSync(process.argv[4]),contentType:'application/json'}));
+  await p.route('http://t/',r=>r.fulfill({body:fs.readFileSync(process.argv[2]),contentType:'text/html'}));
+  await p.goto('http://t/'); await p.waitForTimeout(1500);
+  const I=JSON.parse(fs.readFileSync('../round2/items.json')); const ids=new Set(JSON.parse(fs.readFileSync('../round2/ids_train.json')));
+  const its=I.filter(i=>ids.has(i.id)).slice(0,60);
+  const R=await p.evaluate(its=>{ const T=window.__trainer; return its.map(it=>{ const r=T.readStrokes(it.strokes,T.readerArgs(it.promptText)); return {id:it.id,text:r&&r.text,p:r&&r.p}; }); },its);
+  const H={}; JSON.parse(fs.readFileSync('t_tr_p6.json')).forEach(r=>H[r.id]=r);
+  console.log('page reads',R.length,'identical to harness',R.filter(r=>r.text===H[r.id].text&&Math.abs(r.p-H[r.id].p)<1e-9).length,'model loaded',await p.evaluate(()=>!!window.__trainer.S.HW),'errors',errs.slice(0,3));
+  await b.close(); })();
