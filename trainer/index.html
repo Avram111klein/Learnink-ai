@@ -729,7 +729,7 @@ pad.addEventListener("pointermove",e=>{ if(e.pointerId!==activeId||!S.cur) retur
   const evs=typeof e.getCoalescedEvents==="function"?e.getCoalescedEvents():[]; const list=evs&&evs.length?evs:[e];
   for(const ce of list){ const p=ptOf(ce), last=S.cur[S.cur.length-1]; if(p[0]===last[0]&&p[1]===last[1]) continue; S.cur.push(p); seg(last,p); } });
 function endStroke(e){ if(e.pointerId!==activeId) return; activeId=null; if(!S.cur) return;
-  if(e.type==="pointerup"){ const p=ptOf(e), last=S.cur[S.cur.length-1]; if(p[0]!==last[0]||p[1]!==last[1]){ S.cur.push(p); seg(last,p); } }
+  if(e.type==="pointerup"){ const p=ptOf(e), last=S.cur[S.cur.length-1]; if(e.pointerType!=="mouse"&&!e.pressure) p[3]=last[3]; /* pen-up reports pressure 0: keep the stroke's last real pressure */ if(p[0]!==last[0]||p[1]!==last[1]){ S.cur.push(p); seg(last,p); } }
   S.strokes.push(S.cur); S.cur=null; clearTimeout(liveT); liveT=setTimeout(liveRead,200); startIdle(); }
 pad.addEventListener("pointerup",endStroke); pad.addEventListener("pointercancel",endStroke);
 pad.addEventListener("contextmenu",e=>e.preventDefault());
