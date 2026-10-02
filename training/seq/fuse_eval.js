@@ -20,7 +20,7 @@ const PAGE=`(${function(X,mode,PAR){ const HW=window.__hw, out=[];
     const Lx=HW.lastLayout?HW.lastLayout():null; let groups,cH,rest,fr;
     if(Lx){ ({groups,cH,rest,fr}=Lx); } else { ({groups,cH}=HW.segment(inp)); ({rest,fr}=HW.fractions(groups,cH,allowed)); }
     return {G:groups.map(key).sort(),rest:rest.map(key).sort(),nfr:fr.length,cH,bad}; };
-  if(mode==='on') HW.setFuse(true,PAR); else if(mode==='off'&&HW.setFuse) HW.setFuse(false);
+  if(mode==='on') HW.setFuse(true,{W:PAR}); else if(mode==='off'&&HW.setFuse) HW.setFuse(false);
   let ms=0;
   for(const x of X){ const inp=x.S.map(st=>({t:'pen',p:st.flatMap(q=>[q[0],q[1],0.5]),tp:st}));
     const allowed=[...new Set([..."0123456789()+",...x.vars])];
