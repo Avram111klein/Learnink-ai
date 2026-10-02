@@ -1,6 +1,7 @@
 /* EXPERIMENT ONLY – copy of reader/hw_exp.js + FUSE: the final label of each character group may combine the pixel
    classifier with the stroke-sequence reader (reader/seq.js, global SEQ, loaded first). Segmentation, merging (cls/pm),
    fractions and all other decisions are unchanged. FUSE is OFF by default; off → results identical to hw_exp.js.
+   The fusion only chooses the label of a group (weighted mean of the two engines' probabilities).
    Timed points come in an optional field of each input stroke: {t:'pen', p:[x,y,p,…], tp:[[x,y,tMs,pressure*100],…]}.
    Not used by the trainer page or the app. Changes are tagged FUSE. */
 /* ---------- on-device handwriting recognition (no internet) ---------- */
@@ -43,28 +44,31 @@ const HW=(()=>{
     if(FUSE) out.dist=CX.map((c,i)=>allowed&&!allowed.includes(c)||!(tot>0)?0:p[i]/tot);   // FUSE: allowed-normalised distribution
     return out; }
 
-  /* ---- FUSE: final-label combination with the stroke-sequence reader (rule fixed in advance, see training/seq/README) ----
-     digits (pixel top choice is 0-9): the pixel label stands; the sequence reader may only lower confidence below 0.5
-       when it is sure (p≥TS) of a different symbol.
-     letters/operators: linear mix over the allowed set, p = (1-W)·pixel + W·sequence; label = argmax.
-     both sure (pixel p≥0.5, sequence p≥TS) and they disagree → p < 0.5 (not sure).
-     no time / sequence reader returns null / no SEQ / FUSE off → pixel result unchanged. */
-  const SQ=typeof SEQ!=="undefined"?SEQ:null; let FUSE=false, CTX=null, LAST=null; const FP={W:0.5,TS:0.5,CAP:0.49};
-  function setFuse(on,o){ FUSE=!!on&&!!SQ; Object.assign(FP,o||{}); return FUSE; }
+  /* ---- FUSE: final-label combination with the stroke-sequence reader (stage 3) ----
+     The fusion only picks the label: m = (1-w)·pixel + w·sequence over the allowed symbols, label = argmax(m), p = m[label].
+     w = W[kind of the pixel's top choice: d digit / l letter / o operator] × (1 − p_notSymbol): the sequence reader's
+     "not a symbol" class (a fragment or several symbols, if the model has one) points at no symbol, it only lowers w.
+     No "sure" lowering on disagreement. No time / sequence reader returns null / no SEQ / FUSE off → pixel result unchanged. */
+  const SQ=typeof SEQ!=="undefined"?SEQ:null; let FUSE=false, CTX=null, LAST=null; const FP={W:{d:0,l:0,o:0}};
+  function setFuse(on,o){ FUSE=!!on&&!!SQ; if(o&&o.W) FP.W=Object.assign({},FP.W,o.W); return FUSE; }
+  const kindOf=c=>/^\d$/.test(c)?"d":/^[a-z]$/.test(c)?"l":"o";
   function fuse(r,all,allowed){
     if(!FUSE||!CTX||!r.dist) return r;
     const T=all.map(s=>s.src&&s.src.tp); if(!T.every(t=>SQ.timed(t))) return r;
     const g=T.slice().sort((a,b)=>a[0][2]-b[0][2]);                      // writing order, not x order
-    const q=SQ.classify(g,CTX,allowed); if(!q) return r;
-    const sc=SQ.classes(), ps=CX.map(c=>{ const i=sc.indexOf(c); return i<0||allowed&&!allowed.includes(c)?0:q.probs[i]; });
+    const q=SQ.classify(g,CTX); if(!q) return r;
+    const sc=SQ.classes(), ni=sc.indexOf("∅"), pn=ni>=0?q.probs[ni]:0;
+    const ps=CX.map(c=>{ const i=sc.indexOf(c); return i<0||allowed&&!allowed.includes(c)?0:q.probs[i]; });
     const zs=ps.reduce((a,b)=>a+b,0); if(!(zs>0)) return r;
-    const disagree=r.p>=0.5&&q.p>=FP.TS&&q.ch!==r.ch;              // the sequence reader counts as sure at p≥TS
-    if(/^\d$/.test(r.ch)){ const p=(q.p>=FP.TS&&q.ch!==r.ch)?Math.min(r.p,FP.CAP):r.p; if(typeof window!=="undefined"&&Array.isArray(window.__fuseLog)) window.__fuseLog.push({k:"d",pc:r.ch,pp:r.p,sc:q.ch,sp:q.p,ch:r.ch,p,t0:g.map(s=>s[0][2])}); return {ch:r.ch,p,alt:r.alt,ap:r.ap,fz:"d",sq:q.ch}; }
-    const m=CX.map((c,i)=>(1-FP.W)*r.dist[i]+FP.W*ps[i]/zs); let b=-1,bp=-1,a=-1,ap=-1;
+    const w=(FP.W[kindOf(r.ch)]||0)*(1-pn); if(!(w>0)) return r;
+    const m=CX.map((c,i)=>(1-w)*r.dist[i]+w*ps[i]/zs); let b=-1,bp=-1,a=-1,ap=-1;
     m.forEach((v,i)=>{ if(allowed&&!allowed.includes(CX[i])) return; if(v>bp){ a=b; ap=bp; b=i; bp=v; } else if(v>ap){ a=i; ap=v; } });
-    let p=bp; if(disagree) p=Math.min(p,FP.CAP);
-    if(typeof window!=="undefined"&&Array.isArray(window.__fuseLog)) window.__fuseLog.push({k:"m",pc:r.ch,pp:r.p,sc:q.ch,sp:q.p,ch:CX[b],p,dis:disagree,t0:g.map(s=>s[0][2])});
-    return {ch:CX[b],p,alt:a>=0?CX[a]:null,ap:Math.max(0,ap),fz:"m",sq:q.ch}; }
+    if(typeof window!=="undefined"&&Array.isArray(window.__fuseLog)) window.__fuseLog.push({pc:r.ch,pp:r.p,sc:q.ch,sp:q.p,pn,w,ch:CX[b],p:bp});
+    return {ch:CX[b],p:bp,alt:a>=0?CX[a]:null,ap:Math.max(0,ap)}; }
+  // one group outside readAnswer (measurement): timed strokes of the group + of the whole answer → {base, fused}
+  function fuseGroup(tg,tAll,allowed){ const was=FUSE; FUSE=!!SQ; try{ const r=classify(tg.map(s=>s.map(q=>[q[0],q[1]])),allowed);
+      CTX=SQ&&tAll.every(t=>SQ.timed(t))?SQ.context(tAll):null; const f=fuse(r,tg.map(s=>({src:{tp:s}})),allowed);
+      const strip=x=>({ch:x.ch,p:x.p,alt:x.alt,ap:x.ap}); return {base:strip(r),fused:strip(f),dist:r.dist}; } finally{ FUSE=was; CTX=null; } }
   /* ---- layout: strokes → character groups → rows, fractions, exponents ---- */
   const box=pts=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const [x,y] of pts){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } return {x0,y0,x1,y1,w:x1-x0,h:y1-y0,cx:(x0+x1)/2,cy:(y0+y1)/2}; };
   const toS=s=>{ const pts=[]; for(let i=0;i<s.p.length;i+=3) pts.push([s.p[i],s.p[i+1]]); return Object.assign({pts,src:s},box(pts)); };   // FUSE: src = input stroke
@@ -208,7 +212,7 @@ const HW=(()=>{
       const alts=R.t.alts.filter(a=>a.includes("=")).map(a=>{ const q=a.lastIndexOf("="); return {expr:a.slice(0,q).replace(/x/g,"*"),answer:a.slice(q+1)||null}; });
       out.push({type:"arith",expr:left.replace(/x/g,"*"),answer:right||null,alts,p:R.t.p,x:Math.max(...R.items.map(g=>g.x1)),y:R.cy}); }
     return out; }
-  return {setFuse,lastLayout:()=>LAST,fuseInfo:()=>Object.assign({on:FUSE,seq:!!SQ},FP),readAnswer,readExercises,classify,pre,segment,rowsOf,rowText,fractions,setPersonal,knows:ch=>PSET.has(CX.indexOf(ch))};
+  return {setFuse,fuseGroup,lastLayout:()=>LAST,fuseInfo:()=>({on:FUSE,seq:!!SQ,W:Object.assign({},FP.W)}),readAnswer,readExercises,classify,pre,segment,rowsOf,rowText,fractions,setPersonal,knows:ch=>PSET.has(CX.indexOf(ch))};
 })();
 window.__hw=HW;   // FUSE copy
 
