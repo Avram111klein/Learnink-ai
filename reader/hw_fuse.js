@@ -48,8 +48,9 @@ const HW=(()=>{
      The fusion only picks the label: m = (1-w)·pixel + w·sequence over the allowed symbols, label = argmax(m), p = m[label].
      w = W[kind of the pixel's top choice: d digit / l letter / o operator] × (1 − p_notSymbol): the sequence reader's
      "not a symbol" class (a fragment or several symbols, if the model has one) points at no symbol, it only lowers w.
-     No "sure" lowering on disagreement. No time / sequence reader returns null / no SEQ / FUSE off → pixel result unchanged. */
-  const SQ=typeof SEQ!=="undefined"?SEQ:null; let FUSE=false, CTX=null, LAST=null; const FP={W:{d:0,l:0,o:0}};
+     No "sure" lowering on disagreement. No time / sequence reader returns null / no SEQ / FUSE off → pixel result unchanged.
+     Confidence: label unchanged → the pixel p/alt/ap exactly (as the base); only a changed label gets p = m[label]. */
+  const SQ=typeof SEQ!=="undefined"?SEQ:null; let FUSE=false, CTX=null, LAST=null; const FP={W:{d:0.5,l:0.25,o:0.5}};   // pre-registered default W (setFuse(true) without W uses it)
   function setFuse(on,o){ FUSE=!!on&&!!SQ; if(o&&o.W) FP.W=Object.assign({},FP.W,o.W); return FUSE; }
   const kindOf=c=>/^\d$/.test(c)?"d":/^[a-z]$/.test(c)?"l":"o";
   function fuse(r,all,allowed){
@@ -64,6 +65,7 @@ const HW=(()=>{
     const m=CX.map((c,i)=>(1-w)*r.dist[i]+w*ps[i]/zs); let b=-1,bp=-1,a=-1,ap=-1;
     m.forEach((v,i)=>{ if(allowed&&!allowed.includes(CX[i])) return; if(v>bp){ a=b; ap=bp; b=i; bp=v; } else if(v>ap){ a=i; ap=v; } });
     if(typeof window!=="undefined"&&Array.isArray(window.__fuseLog)) window.__fuseLog.push({pc:r.ch,pp:r.p,sc:q.ch,sp:q.p,pn,w,ch:CX[b],p:bp});
+    if(CX[b]===r.ch) return {ch:r.ch,p:r.p,alt:r.alt,ap:r.ap};   // same label as the pixels → pixel confidence, exactly as the base
     return {ch:CX[b],p:bp,alt:a>=0?CX[a]:null,ap:Math.max(0,ap)}; }
   // one group outside readAnswer (measurement): timed strokes of the group + of the whole answer → {base, fused}
   function fuseGroup(tg,tAll,allowed){ const was=FUSE; FUSE=!!SQ; try{ const r=classify(tg.map(s=>s.map(q=>[q[0],q[1]])),allowed);
